@@ -9,22 +9,21 @@ import Foundation
 import Vapor
 import Fluent
 import FluentSQLite
-import Authentication
+import DungeonChatCore
 
-struct UserAuth: Content, SQLiteUUIDModel, Migration {
+final class UserAuth: Content, SQLiteUUIDModel, Migration {
     var id: UUID?
-    var userId: UUID?
+    var userId: User.ID
     private(set) var email: String
     private(set) var password: String
 
-    init(userId: UUID, email: String, password: String) {
+    var user: Parent<UserAuth, User> {
+        return parent(\.userId)
+    }
+
+    init(userId: User.ID, email: String, password: String) {
         self.userId = userId
         self.email = email
         self.password = password
     }
-}
-
-extension UserAuth: BasicAuthenticatable {
-   static let usernameKey: WritableKeyPath<UserAuth, String> = \.email
-   static let passwordKey: WritableKeyPath<UserAuth, String> = \.password
 }
