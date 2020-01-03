@@ -48,11 +48,11 @@
       },
       {
         "package": "DungeonChatCore",
-        "repositoryURL": "/Users/voronavyacheslav/DungeonChat/DungeonChatCore",
+        "repositoryURL": "git@github.com:vyacheslavvorona/DungeonChatCore.git",
         "state": {
           "branch": null,
-          "revision": "a16550c8dd3df6513a0b6993c19fb5da0987ac0f",
-          "version": "1.0.0"
+          "revision": "712c53455bcc808d4d03b815177a7b50dc07a1c8",
+          "version": "1.0.2"
         }
       },
       {

@@ -10,7 +10,7 @@ import Fluent
 import FluentSQLite
 import DungeonChatCore
 
-extension User: SQLiteUUIDModel {}
+extension User: SQLiteModel {}
 extension User: Migration {}
 extension User: Content {}
 extension User: Parameter {}
