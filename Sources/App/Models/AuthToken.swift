@@ -12,8 +12,8 @@ import FluentSQLite
 import Authentication
 import DungeonChatCore
 
-public final class AuthToken: SQLiteUUIDModel {
-    public var id: UUID?
+public final class AuthToken: SQLiteModel {
+    public var id: Int?
     var token: String
     var userAuthId: UserAuth.ID
 

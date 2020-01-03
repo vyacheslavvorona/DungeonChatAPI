@@ -12,8 +12,8 @@ import FluentSQLite
 import DungeonChatCore
 import Authentication
 
-public final class UserAuth: Content, SQLiteUUIDModel, Migration {
-    public var id: UUID?
+public final class UserAuth: Content, SQLiteModel, Migration {
+    public var id: Int?
     var userId: User.ID?
     private(set) var email: String
     private(set) var password: String
