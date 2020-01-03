@@ -37,7 +37,8 @@ private extension UserController {
                 }
                 let digest = try request.make(BCryptDigest.self)
                 let hashedPassword = try digest.hash(newUserAuth.password)
-                let userAuth = UserAuth(userId: userId, email: newUserAuth.email, password: hashedPassword)
+                let userAuth = UserAuth(email: newUserAuth.email, password: hashedPassword)
+                userAuth.userId = userId
                 return userAuth.save(on: request).transform(to: .created)
             }
     }

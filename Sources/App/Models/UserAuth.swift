@@ -13,16 +13,15 @@ import DungeonChatCore
 
 final class UserAuth: Content, SQLiteUUIDModel, Migration {
     var id: UUID?
-    var userId: User.ID
+    var userId: User.ID?
     private(set) var email: String
     private(set) var password: String
 
-    var user: Parent<UserAuth, User> {
+    var user: Parent<UserAuth, User>? {
         return parent(\.userId)
     }
 
-    init(userId: User.ID, email: String, password: String) {
-        self.userId = userId
+    init(email: String, password: String) {
         self.email = email
         self.password = password
     }

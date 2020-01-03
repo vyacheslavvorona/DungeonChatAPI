@@ -18,7 +18,7 @@ extension User: Parameter {}
 
 extension User {
 
-    var auth: Children<User, UserAuth> {
+    var auth: Children<User, UserAuth>? {
         return children(\.userId)
     }
 

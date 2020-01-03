@@ -17,6 +17,9 @@ let package = Package(
         .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "3.0.0")),
 
+        /// 💻 APIs for creating interactive CLI tools.
+        .package(url: "https://github.com/vapor/console.git", from: "3.0.0"),
+
         // DungeonChat shared code
 //        .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0")
         .package(url: "../DungeonChatCore", from: "1.0.0")
@@ -28,6 +31,7 @@ let package = Package(
             "Authentication",
             "Crypto",
             "Random",
+            "Console",
             "DungeonChatCore"
         ]),
         .target(name: "Run", dependencies: ["App"]),
