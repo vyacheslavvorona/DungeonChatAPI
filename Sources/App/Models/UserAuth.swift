@@ -14,7 +14,7 @@ import Authentication
 
 public final class UserAuth: Content, SQLiteModel, Migration {
     public var id: Int?
-    var userId: User.ID?
+    private(set) var userId: User.ID?
     private(set) var email: String
     private(set) var password: String
 
@@ -29,6 +29,11 @@ public final class UserAuth: Content, SQLiteModel, Migration {
     init(email: String, password: String) {
         self.email = email
         self.password = password
+    }
+
+    convenience init(userId: User.ID, email: String, password: String) {
+        self.init(email: email, password: password)
+        self.userId = userId
     }
 }
 

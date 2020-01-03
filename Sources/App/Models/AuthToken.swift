@@ -14,8 +14,8 @@ import DungeonChatCore
 
 public final class AuthToken: SQLiteModel {
     public var id: Int?
-    var token: String
-    var userAuthId: UserAuth.ID
+    private(set) var token: String
+    private(set) var userAuthId: UserAuth.ID
 
     var userAuth: Parent<AuthToken, UserAuth> {
         return parent(\.userAuthId)
