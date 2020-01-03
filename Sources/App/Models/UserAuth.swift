@@ -10,9 +10,10 @@ import Vapor
 import Fluent
 import FluentSQLite
 import DungeonChatCore
+import Authentication
 
-final class UserAuth: Content, SQLiteUUIDModel, Migration {
-    var id: UUID?
+public final class UserAuth: Content, SQLiteUUIDModel, Migration {
+    public var id: UUID?
     var userId: User.ID?
     private(set) var email: String
     private(set) var password: String
@@ -21,8 +22,16 @@ final class UserAuth: Content, SQLiteUUIDModel, Migration {
         return parent(\.userId)
     }
 
+    var token: Children<UserAuth, AuthToken> {
+        return children(\.userAuthId)
+    }
+
     init(email: String, password: String) {
         self.email = email
         self.password = password
     }
+}
+
+extension UserAuth: TokenAuthenticatable {
+    public typealias TokenType = AuthToken
 }
