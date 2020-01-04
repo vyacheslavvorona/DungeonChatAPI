@@ -21,6 +21,10 @@ public final class User: SharedUser {
     public private(set) var username: String?
     public private(set) var registrationDate: Date? = Date()
 
+    public var structEmail: Email? {
+        Email(email)
+    }
+
     // Local fields
     private(set) var password: String
 
@@ -45,7 +49,7 @@ extension User {
         )
     }
 
-    struct Public: SharedUser, Content {
+    struct Public: Content {
         var id: Int?
         var email: String?
         var firstName: String?

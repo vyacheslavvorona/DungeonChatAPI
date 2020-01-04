@@ -27,6 +27,10 @@ class UserController: RouteCollection {
 private extension UserController {
 
     func registerUserHandler(_ request: Request, newUser: User) throws -> Future<User.Public> {
+        guard newUser.email.stringIs(.email) else {
+            throw Abort(.badRequest, reason: "Wrong email format")
+        }
+
         return User.query(on: request).filter(\.email == newUser.email).first()
             .flatMap { existingUser in
                 guard existingUser == nil else {
@@ -36,7 +40,9 @@ private extension UserController {
                 let digest = try request.make(BCryptDigest.self)
                 let hashedPassword = try digest.hash(newUser.password)
                 let user = User(email: newUser.email, password: hashedPassword)
-                return user.save(on: request).map { $0.publicUser }
+                return user.save(on: request).map {
+                    $0.publicUser
+                }
             }
     }
 

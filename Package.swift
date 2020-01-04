@@ -17,15 +17,14 @@ let package = Package(
         .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "3.0.0")),
 
-        /// 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", from: "3.0.0"),
-
         // DungeonChat shared code
-//        .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0")
-        .package(
-            url: "git@github.com:vyacheslavvorona/DungeonChatCore.git",
-            .branch("shared_protocol")
-        )
+        .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0"),
+//        .package(
+//            url: "git@github.com:vyacheslavvorona/DungeonChatCore.git",
+//            .branch("shared_protocol")
+//        )
+        /// 💻 APIs for creating interactive CLI tools.
+        .package(url: "https://github.com/vapor/console.git", from: "3.0.0")
     ],
     targets: [
         .target(name: "App", dependencies: [
@@ -34,8 +33,8 @@ let package = Package(
             "Authentication",
             "Crypto",
             "Random",
-            "Console",
-            "DungeonChatCore"
+            "DungeonChatCore",
+            "Console"
         ]),
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(name: "AppTests", dependencies: ["App"])
