@@ -15,15 +15,15 @@ import DungeonChatCore
 public final class AuthToken: SQLiteModel {
     public var id: Int?
     private(set) var token: String
-    private(set) var userAuthId: UserAuth.ID
+    private(set) var userId: User.ID
 
-    var userAuth: Parent<AuthToken, UserAuth> {
-        return parent(\.userAuthId)
+    var user: Parent<AuthToken, User> {
+        return parent(\.userId)
     }
 
-    init(token: String, userAuthId: UserAuth.ID) {
+    init(token: String, userId: User.ID) {
         self.token = token
-        self.userAuthId = userAuthId
+        self.userId = userId
     }
 }
 
@@ -38,10 +38,10 @@ extension AuthToken: BearerAuthenticatable {
 }
 
 extension AuthToken: Token {
-    public typealias UserType = UserAuth
-    public typealias UserIDType = UserAuth.ID
+    public typealias UserType = User
+    public typealias UserIDType = User.ID
 
-    public static var userIDKey: WritableKeyPath<AuthToken, UserAuth.ID> {
-        \.userAuthId
+    public static var userIDKey: WritableKeyPath<AuthToken, User.ID> {
+        \.userId
     }
 }
