@@ -15,18 +15,13 @@ public final class User: SharedUser {
 
     // Shared fields
     public var id: Int?
+    public private(set) var email: String
     public private(set) var firstName: String?
     public private(set) var lastName: String?
     public private(set) var username: String?
-    private var _registrationDate: String? = Date().iso8601
-
-    public var registrationDate: Date? {
-        guard let string = _registrationDate else { return nil }
-        return string.iso8601
-    }
+    public private(set) var registrationDate: Date? = Date()
 
     // Local fields
-    private(set) var email: String
     private(set) var password: String
 
     init(email: String, password: String) {
@@ -35,10 +30,39 @@ public final class User: SharedUser {
     }
 }
 
+// MARK: - Public User
+
+extension User {
+
+    var publicUser: Public {
+        Public(
+            id: id,
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            username: username,
+            registrationDate: registrationDate
+        )
+    }
+
+    struct Public: SharedUser, Content {
+        var id: Int?
+        var email: String?
+        var firstName: String?
+        var lastName: String?
+        var username: String?
+        var registrationDate: Date?
+    }
+}
+
+// MARK: - Vapor + Fluent
+
 extension User: SQLiteModel {}
 extension User: Migration {}
 extension User: Content {}
 extension User: Parameter {}
+
+// MARK: - TokenAuthenticatable
 
 extension User: TokenAuthenticatable {
     public typealias TokenType = AuthToken

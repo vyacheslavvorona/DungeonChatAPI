@@ -27,8 +27,12 @@ public final class AuthToken: SQLiteModel {
     }
 }
 
+// MARK: - Vapor + Fluent
+
 extension AuthToken: Migration {}
 extension AuthToken: Content {}
+
+// MARK: - Authentication
 
 extension AuthToken: BearerAuthenticatable {
 
