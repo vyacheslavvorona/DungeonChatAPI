@@ -15,7 +15,6 @@ public final class User: SharedUser {
 
     // Shared fields
     public var id: Int?
-    public private(set) var email: String
     public private(set) var firstName: String?
     public private(set) var lastName: String?
     public private(set) var username: String?
@@ -26,10 +25,11 @@ public final class User: SharedUser {
     }
 
     // Local fields
+    private(set) var email: String
     private(set) var password: String
 
-    init(email: String, password: String) {
-        self.email = email
+    init(email: Email, password: String) {
+        self.email = email.stringValue
         self.password = password
     }
 }
