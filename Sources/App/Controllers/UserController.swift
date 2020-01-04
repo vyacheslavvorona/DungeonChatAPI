@@ -47,6 +47,10 @@ private extension UserController {
     }
 
     func loginHandler(_ request: Request, user: User) throws -> Future<AuthToken> {
+        guard user.email.stringIs(.email) else {
+            throw Abort(.badRequest, reason: "Wrong email format")
+        }
+
         return User.query(on: request).filter(\.email == user.email).first()
             .flatMap { existingUser -> Future<AuthToken> in
                 guard let existingUser = existingUser,
