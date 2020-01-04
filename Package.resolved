@@ -50,9 +50,9 @@
         "package": "DungeonChatCore",
         "repositoryURL": "git@github.com:vyacheslavvorona/DungeonChatCore.git",
         "state": {
-          "branch": null,
-          "revision": "712c53455bcc808d4d03b815177a7b50dc07a1c8",
-          "version": "1.0.2"
+          "branch": "shared_protocol",
+          "revision": "c159decdcf267be9c58e8fbe1497ccd86aa5ab07",
+          "version": null
         }
       },
       {

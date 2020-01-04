@@ -21,8 +21,11 @@ let package = Package(
         .package(url: "https://github.com/vapor/console.git", from: "3.0.0"),
 
         // DungeonChat shared code
-        .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0")
-//        .package(url: "../DungeonChatCore", from: "1.0.0")
+//        .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0")
+        .package(
+            url: "git@github.com:vyacheslavvorona/DungeonChatCore.git",
+            .branch("shared_protocol")
+        )
     ],
     targets: [
         .target(name: "App", dependencies: [

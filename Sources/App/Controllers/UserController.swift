@@ -17,8 +17,8 @@ class UserController: RouteCollection {
 
     func boot(router: Router) throws {
         let group = router.grouped("api", "users")
-        group.post(UserAuth.self, at: "register", use: registerUserHandler)
-        group.post(UserAuth.self, at: "login", use: loginHandler)
+        group.post(User.self, at: "register", use: registerUserHandler)
+        group.post(User.self, at: "login", use: loginHandler)
     }
 }
 
@@ -26,43 +26,36 @@ class UserController: RouteCollection {
 
 private extension UserController {
 
-    func registerUserHandler(_ request: Request, newUserAuth: UserAuth) throws -> Future<HTTPResponseStatus> {
-        return UserAuth.query(on: request).filter(\.email == newUserAuth.email).first()
-            .map {
-                if $0 != nil {
+    func registerUserHandler(_ request: Request, newUser: User) throws -> Future<User.Public> {
+        return User.query(on: request).filter(\.email == newUser.email).first()
+            .flatMap { existingUser in
+                guard existingUser == nil else {
                     throw Abort(.badRequest, reason: "A user with this email already exists")
                 }
-            }
-            .flatMap { User().save(on: request) }
-            .flatMap { user in
-                guard let userId = user.id else {
-                    throw Abort(.internalServerError, reason: "Could not create a new user")
-                }
+
                 let digest = try request.make(BCryptDigest.self)
-                let hashedPassword = try digest.hash(newUserAuth.password)
-                let userAuth = UserAuth(userId: userId, email: newUserAuth.email, password: hashedPassword)
-                return userAuth.save(on: request).transform(to: .created)
+                let hashedPassword = try digest.hash(newUser.password)
+                let user = User(email: newUser.email, password: hashedPassword)
+                return user.save(on: request).map { $0.publicUser }
             }
     }
 
-    func loginHandler(_ request: Request, userAuth: UserAuth) throws -> Future<AuthToken> {
-        return UserAuth.query(on: request).filter(\.email == userAuth.email).first()
-            .flatMap { existingAuth -> Future<AuthToken> in
-                guard let existingAuth = existingAuth else {
+    func loginHandler(_ request: Request, user: User) throws -> Future<AuthToken> {
+        return User.query(on: request).filter(\.email == user.email).first()
+            .flatMap { existingUser -> Future<AuthToken> in
+                guard let existingUser = existingUser,
+                    let userId = existingUser.id else {
                     throw Abort(.notFound, reason: "No user with this email")
                 }
-                guard let authId = existingAuth.id else {
-                    throw Abort(.internalServerError, reason: "UserAuth.id is missing")
-                }
                 let digest = try request.make(BCryptDigest.self)
-                guard try digest.verify(userAuth.password, created: existingAuth.password) else {
+                guard try digest.verify(user.password, created: existingUser.password) else {
                     throw Abort(.unauthorized, reason: "Wrong password")
                 }
 
-                return try existingAuth.token.query(on: request).delete()
+                return try existingUser.token.query(on: request).delete()
                     .flatMap { _ in
                         let tokenString = try URandom().generateData(count: 32).base64EncodedString()
-                        let token = AuthToken(token: tokenString, userAuthId: authId)
+                        let token = AuthToken(token: tokenString, userId: userId)
                         return token.save(on: request)
                     }
             }
