@@ -23,7 +23,7 @@ class UserController: RouteCollection {
 
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
-        tokenAuthGroup.put(UserContent.self, at: "api", "users", Int.parameter, use: updateHandler)
+        tokenAuthGroup.put(UserContent.self, at: "api", "users", use: updateHandler)
     }
 }
 
@@ -75,7 +75,10 @@ private extension UserController {
     }
 
     func updateHandler(_ request: Request, userContent: UserContent) throws -> Future<UserContent> {
-        let userId = try request.parameters.next(Int.self)
+        let authenticated = try request.requireAuthenticated(User.self)
+        guard let userId = authenticated.id else {
+            throw Abort(.unauthorized, reason: "User not authorized")
+        }
         return User.find(userId, on: request)
             .flatMap { existingUser in
                 guard let existingUser = existingUser else {
