@@ -34,12 +34,14 @@ public final class User: SharedUser {
     }
 }
 
-// MARK: - Public User
+// MARK: - UserContent
+
+extension UserContent: Content {}
 
 extension User {
-
-    var publicUser: Public {
-        Public(
+    
+    var content: UserContent {
+        UserContent(
             id: id,
             email: email,
             firstName: firstName,
@@ -49,13 +51,11 @@ extension User {
         )
     }
 
-    struct Public: Content {
-        var id: Int?
-        var email: String?
-        var firstName: String?
-        var lastName: String?
-        var username: String?
-        var registrationDate: Date?
+    func update(from content: UserContent) {
+        if let contentEmail = content.email { email = contentEmail }
+        if let contentFirstName = content.firstName { firstName = contentFirstName }
+        if let contentLastName = content.lastName { lastName = contentLastName }
+        if let contentUsername = content.username { username = contentUsername }
     }
 }
 

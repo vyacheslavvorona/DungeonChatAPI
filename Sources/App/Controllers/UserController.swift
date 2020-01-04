@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 import Fluent
 import FluentSQLite
+import Authentication
 import Crypto
 import Random
 import DungeonChatCore
@@ -19,6 +20,10 @@ class UserController: RouteCollection {
         let group = router.grouped("api", "users")
         group.post(User.self, at: "register", use: registerUserHandler)
         group.post(User.self, at: "login", use: loginHandler)
+
+        let tokenAuthMiddleware = User.tokenAuthMiddleware()
+        let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
+        tokenAuthGroup.put(UserContent.self, at: "api", "users", Int.parameter, use: updateHandler)
     }
 }
 
@@ -26,7 +31,7 @@ class UserController: RouteCollection {
 
 private extension UserController {
 
-    func registerUserHandler(_ request: Request, newUser: User) throws -> Future<User.Public> {
+    func registerUserHandler(_ request: Request, newUser: User) throws -> Future<UserContent> {
         guard let email = newUser.structEmail else {
             throw Abort(.badRequest, reason: "Wrong email format")
         }
@@ -40,9 +45,7 @@ private extension UserController {
                 let digest = try request.make(BCryptDigest.self)
                 let hashedPassword = try digest.hash(newUser.password)
                 let user = User(email: email, password: hashedPassword)
-                return user.save(on: request).map {
-                    $0.publicUser
-                }
+                return user.save(on: request).map { $0.content }
             }
     }
 
@@ -55,7 +58,7 @@ private extension UserController {
             .flatMap { existingUser -> Future<AuthToken> in
                 guard let existingUser = existingUser,
                     let userId = existingUser.id else {
-                    throw Abort(.notFound, reason: "No user with this email")
+                    throw Abort(.notFound, reason: "No user with specified email")
                 }
                 let digest = try request.make(BCryptDigest.self)
                 guard try digest.verify(user.password, created: existingUser.password) else {
@@ -68,6 +71,18 @@ private extension UserController {
                         let token = AuthToken(token: tokenString, userId: userId)
                         return token.save(on: request)
                     }
+            }
+    }
+
+    func updateHandler(_ request: Request, userContent: UserContent) throws -> Future<UserContent> {
+        let userId = try request.parameters.next(Int.self)
+        return User.find(userId, on: request)
+            .flatMap { existingUser in
+                guard let existingUser = existingUser else {
+                    throw Abort(.notFound, reason: "No user with specified id")
+                }
+                existingUser.update(from: userContent)
+                return existingUser.update(on: request, originalID: userId).map { $0.content }
             }
     }
 }
