@@ -10,23 +10,29 @@ import Fluent
 import FluentSQLite
 import Authentication
 import DungeonChatCore
+import Validation
 
 public final class User: SharedUser {
 
     // Shared fields
     public var id: Int?
+    public private(set) var email: String
     public private(set) var firstName: String?
     public private(set) var lastName: String?
     public private(set) var username: String?
     public private(set) var registrationDate: Date? = Date()
 
+    // Local fields
+    private(set) var password: String
+    
     public var structEmail: Email? {
         Email(email)
     }
-
-    // Local fields
-    private(set) var email: String
-    private(set) var password: String
+    
+    init(email: String, password: String) {
+        self.email = email
+        self.password = password
+    }
 
     init(email: Email, password: String) {
         self.email = email.stringValue
@@ -52,7 +58,7 @@ extension User {
     }
 
     func update(from content: UserContent) {
-        if let contentEmail = content.email { email = contentEmail }
+        email = content.email
         if let contentFirstName = content.firstName { firstName = contentFirstName }
         if let contentLastName = content.lastName { lastName = contentLastName }
         if let contentUsername = content.username { username = contentUsername }
@@ -73,5 +79,19 @@ extension User: TokenAuthenticatable {
 
     var token: Children<User, AuthToken> {
         return children(\.userId)
+    }
+}
+
+// MARK: - Validatable
+
+extension User: Validatable {
+    public static func validations() throws -> Validations<User> {
+        var validations = Validations(User.self)
+        try validations.add(\.email, .email)
+        try validations.add(\.password, .ascii && .count(5...))
+        try validations.add(\.firstName, .letters && .count(2...) || .nil)
+        try validations.add(\.lastName, .letters && .count(2...) || .nil)
+        try validations.add(\.username, .alphanumeric && .count(2...) || .nil)
+        return validations
     }
 }

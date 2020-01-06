@@ -17,6 +17,9 @@ let package = Package(
         .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "3.0.0")),
 
+        // Values validation framework
+        .package(url: "https://github.com/vapor/validation.git", from: "2.0.0"),
+
         // DungeonChat shared code
         .package(url: "git@github.com:vyacheslavvorona/DungeonChatCore.git", from: "1.0.0"),
 //        .package(
@@ -33,6 +36,7 @@ let package = Package(
             "Authentication",
             "Crypto",
             "Random",
+            "Validation",
             "DungeonChatCore",
             "Console"
         ]),
