@@ -10,7 +10,6 @@ import Fluent
 import FluentSQLite
 import Authentication
 import DungeonChatCore
-import Validation
 
 public final class User: SharedUser {
 
@@ -42,8 +41,6 @@ public final class User: SharedUser {
 
 // MARK: - UserContent
 
-extension UserContent: Content {}
-
 extension User {
     
     var content: UserContent {
@@ -58,7 +55,7 @@ extension User {
     }
 
     func update(from content: UserContent) {
-        email = content.email
+        if let contentEmail = content.email { email = contentEmail }
         if let contentFirstName = content.firstName { firstName = contentFirstName }
         if let contentLastName = content.lastName { lastName = contentLastName }
         if let contentUsername = content.username { username = contentUsername }

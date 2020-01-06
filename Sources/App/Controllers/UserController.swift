@@ -76,6 +76,7 @@ private extension UserController {
         guard let userId = authenticated.id else {
             throw Abort(.unauthorized, reason: "User not authorized")
         }
+        try userContent.validate()
         return User.find(userId, on: request)
             .flatMap { existingUser in
                 guard let existingUser = existingUser else {
