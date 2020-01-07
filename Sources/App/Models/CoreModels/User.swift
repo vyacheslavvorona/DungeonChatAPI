@@ -15,10 +15,10 @@ public final class User: SharedUser {
 
     // Shared fields
     public var id: Int?
-    public private(set) var email: String
-    public private(set) var firstName: String?
-    public private(set) var lastName: String?
-    public private(set) var username: String?
+    public var email: String
+    public var firstName: String?
+    public var lastName: String?
+    public var username: String?
     public private(set) var registrationDate: Date? = Date()
 
     // Local fields
