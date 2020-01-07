@@ -5,7 +5,6 @@
 //  Created by Vorona Vyacheslav on 1/6/20.
 //
 
-import Foundation
 import DungeonChatCore
 import Vapor
 

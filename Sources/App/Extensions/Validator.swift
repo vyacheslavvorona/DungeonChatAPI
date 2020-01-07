@@ -5,7 +5,6 @@
 //  Created by vorona.vyacheslav on 2020/01/06.
 //
 
-import Foundation
 import Validation
 
 extension Validator {
