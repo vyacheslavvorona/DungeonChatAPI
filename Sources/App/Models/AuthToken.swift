@@ -19,7 +19,7 @@ public final class AuthToken: SQLiteModel {
     private(set) var authDate: Date = Date()
 
     var user: Parent<AuthToken, User> {
-        return parent(\.userId)
+        parent(\.userId)
     }
 
     init(token: String, userId: User.ID) {

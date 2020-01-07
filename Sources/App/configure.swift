@@ -35,5 +35,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var migrations = MigrationConfig()
     migrations.add(model: User.self, database: .sqlite)
     migrations.add(model: AuthToken.self, database: .sqlite)
+    migrations.add(model: Campaign.self, database: .sqlite)
+    migrations.add(model: CampaignUser.self, database: .sqlite)
     services.register(migrations)
 }
