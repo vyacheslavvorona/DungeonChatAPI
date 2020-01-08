@@ -13,7 +13,7 @@ class CampaignController: RouteCollection {
     func boot(router: Router) throws {
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
-        tokenAuthGroup.post(Campaign.self, at: "api", "campaigns", use: createCampaignHandler)
+        tokenAuthGroup.post(CampaignContent.self, at: "api", "campaigns", use: createCampaignHandler)
     }
 }
 
@@ -21,21 +21,15 @@ class CampaignController: RouteCollection {
 
 private extension CampaignController {
 
-    func createCampaignHandler(_ request: Request, newCampaign: Campaign) throws -> Future<Campaign> {
+    func createCampaignHandler(_ request: Request, campaignContent: CampaignContent) throws -> Future<Campaign> {
         let user = try request.requireAuthenticated(User.self)
-        try newCampaign.validate()
-        newCampaign.
-        // TODO: CampaignContent
-        return User.query(on: request).filter(\.email == newUser.email).first()
-            .flatMap { existingUser in
-                guard existingUser == nil else {
-                    throw Abort(.badRequest, reason: "A user with this email already exists")
-                }
-
-                let digest = try request.make(BCryptDigest.self)
-                let hashedPassword = try digest.hash(newUser.password)
-                let user = User(email: newUser.email, password: hashedPassword)
-                return user.save(on: request).map { $0.content }
-            }
+        guard let hostId = user.id else {
+            throw Abort(.unauthorized, reason: "User id not found")
+        }
+        try campaignContent.validate()
+        guard let newCampaign = Campaign(campaignContent, hostId: hostId) else {
+            throw Abort(.internalServerError, reason: "Unable to create new Campaign")
+        }
+        return newCampaign.save(on: request)
     }
 }

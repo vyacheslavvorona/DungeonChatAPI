@@ -31,6 +31,15 @@ public final class Campaign: SharedCampaign {
         self.name = name
         self.hostId = hostId
     }
+    
+    convenience init?(_ content: CampaignContent, hostId: User.ID) {
+        guard let name = content.name else { return nil }
+        self.init(name: name, hostId: hostId)
+        
+        if let accessibilityInt = content.accessibilityInt {
+            self.accessibilityInt = accessibilityInt
+        }
+    }
 }
 
 // MARK: - Vapor + Fluent
@@ -46,7 +55,7 @@ extension Campaign: Validatable {
     
     public static func validations() throws -> Validations<Campaign> {
         var validations = Validations(Campaign.self)
-        try validations.add(\.name, .alphanumeric)
+        try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces))
         try validations.add(\.hostId, .range(1...))
         let accessTypesCount = CampaignAccessibilityType.allCases.count
         try validations.add(\.hostId, .range(0...accessTypesCount - 1))

@@ -14,4 +14,7 @@ public func routes(_ router: Router) throws {
 
     let userController = UserController()
     try userController.boot(router: router)
+    
+    let campaignController = CampaignController()
+    try campaignController.boot(router: router)
 }

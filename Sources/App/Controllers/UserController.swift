@@ -70,7 +70,7 @@ private extension UserController {
     func updateHandler(_ request: Request, userContent: UserContent) throws -> Future<UserContent> {
         let authenticated = try request.requireAuthenticated(User.self)
         guard let userId = authenticated.id else {
-            throw Abort(.unauthorized, reason: "User not authorized")
+            throw Abort(.unauthorized, reason: "User id not found")
         }
         try userContent.validate()
         return User.find(userId, on: request)
