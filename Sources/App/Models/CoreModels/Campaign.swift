@@ -14,10 +14,10 @@ public final class Campaign: SharedCampaign {
     
     // Shared fields
     public var id: Int?
-    public private(set) var name: String
-    public private(set) var hostId: User.ID
-    public private(set) var startDate: Date? = Date()
-    public private(set) var accessibilityInt: Int = 0
+    public var name: String
+    public var hostId: User.ID
+    public var startDate: Date? = Date()
+    public var accessibilityInt: Int = 0
     
     var host: Parent<Campaign, User> {
         parent(\.hostId)
@@ -39,6 +39,25 @@ public final class Campaign: SharedCampaign {
         if let accessibilityInt = content.accessibilityInt {
             self.accessibilityInt = accessibilityInt
         }
+    }
+    
+    func update(from content: CampaignContent, on conn: DatabaseConnectable) throws -> Future<Campaign> {
+        func updateWithPromise(_ this: Campaign) -> Future<Campaign> {
+            let promise: Promise<Campaign> = conn.eventLoop.newPromise()
+            this.update(from: content)
+            promise.succeed(result: this)
+            return promise.futureResult
+        }
+        
+//        if let hostId = content.hostId {
+//            return User.find(hostId, on: conn).flatMap { [unowned self] user in
+//                guard user != nil else {
+//                    throw Abort(.notFound, reason: "User to become Campaign Host not found")
+//                }
+//                return updateWithPromise(self)
+//            }
+//        }
+        return updateWithPromise(self)
     }
 }
 

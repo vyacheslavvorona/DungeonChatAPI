@@ -14,6 +14,7 @@ class CampaignController: RouteCollection {
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
         tokenAuthGroup.post(CampaignContent.self, at: "api", "campaigns", use: createCampaignHandler)
+        tokenAuthGroup.put(CampaignContent.self, at: "api", "campaigns", Int.parameter, use: updateCampaignHandler)
     }
 }
 
@@ -31,5 +32,21 @@ private extension CampaignController {
             throw Abort(.internalServerError, reason: "Unable to create new Campaign")
         }
         return newCampaign.save(on: request)
+    }
+    
+    func updateCampaignHandler(_ request: Request, campaignContent: CampaignContent) throws -> Future<Campaign> {
+        let user = try request.requireAuthenticated(User.self)
+        guard let userId = user.id else {
+            throw Abort(.unauthorized, reason: "User id not found")
+        }
+        let campaignId = try request.parameters.next(Int.self)
+        return Campaign.find(campaignId, on: request)
+            .flatMap { campaign -> Future<Campaign> in
+                guard let campaign = campaign, campaign.hostId == userId else {
+                    throw Abort(.forbidden, reason: "User is not able to modify specified Campaign")
+                }
+                return try campaign.update(from: campaignContent, on: request)
+            }
+            .flatMap { $0.update(on: request, originalID: campaignId)}
     }
 }
