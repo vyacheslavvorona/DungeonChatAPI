@@ -11,10 +11,11 @@ import DungeonChatCore
 class CampaignController: RouteCollection {
 
     func boot(router: Router) throws {
+        let group = router.grouped("api", "campaigns")
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
-        let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
-        tokenAuthGroup.post(CampaignContent.self, at: "api", "campaigns", use: createCampaignHandler)
-        tokenAuthGroup.put(CampaignContent.self, at: "api", "campaigns", Int.parameter, use: updateCampaignHandler)
+        let tokenAuthGroup = group.grouped(tokenAuthMiddleware)
+        tokenAuthGroup.post(CampaignContent.self, use: createCampaignHandler)
+        tokenAuthGroup.put(CampaignContent.self, at: Int.parameter, use: updateCampaignHandler)
     }
 }
 
@@ -41,8 +42,9 @@ private extension CampaignController {
         }
         let campaignId = try request.parameters.next(Int.self)
         return Campaign.find(campaignId, on: request)
+            .unwrap(or: Abort(.notFound, reason: "No Campaign with specified id"))
             .flatMap { campaign -> Future<Campaign> in
-                guard let campaign = campaign, campaign.hostId == userId else {
+                guard campaign.hostId == userId else {
                     throw Abort(.forbidden, reason: "User is not able to modify specified Campaign")
                 }
                 return try campaign.update(from: campaignContent, on: request)

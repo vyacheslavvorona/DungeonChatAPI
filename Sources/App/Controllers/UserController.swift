@@ -16,10 +16,11 @@ class UserController: RouteCollection {
         let group = router.grouped("api", "users")
         group.post(User.self, at: "register", use: registerUserHandler)
         group.post(User.self, at: "login", use: loginHandler)
+        group.get(Int.parameter, use: getHandler)
 
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
-        let tokenAuthGroup = router.grouped(tokenAuthMiddleware)
-        tokenAuthGroup.put(UserContent.self, at: "api", "users", use: updateHandler)
+        let tokenAuthGroup = group.grouped(tokenAuthMiddleware)
+        tokenAuthGroup.put(UserContent.self, use: updateHandler)
     }
 }
 
@@ -32,7 +33,7 @@ private extension UserController {
         return User.query(on: request).filter(\.email == newUser.email).first()
             .flatMap { existingUser in
                 guard existingUser == nil else {
-                    throw Abort(.badRequest, reason: "A user with this email already exists")
+                    throw Abort(.badRequest, reason: "A User with this email already exists")
                 }
 
                 let digest = try request.make(BCryptDigest.self)
@@ -48,10 +49,10 @@ private extension UserController {
         }
 
         return User.query(on: request).filter(\.email == user.email).first()
+            .unwrap(or: Abort(.notFound, reason: "No User with specified email"))
             .flatMap { existingUser -> Future<AuthToken> in
-                guard let existingUser = existingUser,
-                    let userId = existingUser.id else {
-                    throw Abort(.notFound, reason: "No user with specified email")
+                guard let userId = existingUser.id else {
+                    throw Abort(.internalServerError, reason: "No User id")
                 }
                 let digest = try request.make(BCryptDigest.self)
                 guard try digest.verify(user.password, created: existingUser.password) else {
@@ -67,17 +68,23 @@ private extension UserController {
             }
     }
 
+    func getHandler(_ request: Request) throws -> Future<UserContent> {
+        let userId = try request.parameters.next(Int.self)
+        return User.find(userId, on: request)
+            .unwrap(or: Abort(.notFound, reason: "No User with specified id"))
+            .map { $0.content }
+    }
+
     func updateHandler(_ request: Request, userContent: UserContent) throws -> Future<UserContent> {
         let authenticated = try request.requireAuthenticated(User.self)
         guard let userId = authenticated.id else {
             throw Abort(.unauthorized, reason: "User id not found")
         }
         try userContent.validate()
+        
         return User.find(userId, on: request)
+            .unwrap(or: Abort(.notFound, reason: "No User with specified id"))
             .flatMap { existingUser in
-                guard let existingUser = existingUser else {
-                    throw Abort(.notFound, reason: "No user with specified id")
-                }
                 existingUser.update(from: userContent)
                 return existingUser.update(on: request, originalID: userId).map { $0.content }
             }
