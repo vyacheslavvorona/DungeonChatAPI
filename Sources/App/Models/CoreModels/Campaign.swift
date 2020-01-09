@@ -42,22 +42,22 @@ public final class Campaign: SharedCampaign {
     }
     
     func update(from content: CampaignContent, on conn: DatabaseConnectable) throws -> Future<Campaign> {
-        func updateWithPromise(_ this: Campaign) -> Future<Campaign> {
+        func updateWithPromise() -> Future<Campaign> {
             let promise: Promise<Campaign> = conn.eventLoop.newPromise()
-            this.update(from: content)
-            promise.succeed(result: this)
+            update(from: content)
+            promise.succeed(result: self)
             return promise.futureResult
         }
         
-//        if let hostId = content.hostId {
-//            return User.find(hostId, on: conn).flatMap { [unowned self] user in
-//                guard user != nil else {
-//                    throw Abort(.notFound, reason: "User to become Campaign Host not found")
-//                }
-//                return updateWithPromise(self)
-//            }
-//        }
-        return updateWithPromise(self)
+        if let hostId = content.hostId {
+            return User.find(hostId, on: conn).flatMap { user in
+                guard user != nil else {
+                    throw Abort(.notFound, reason: "User to become Campaign Host not found")
+                }
+                return updateWithPromise()
+            }
+        }
+        return updateWithPromise()
     }
 }
 
