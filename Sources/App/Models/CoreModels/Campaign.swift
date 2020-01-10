@@ -78,6 +78,7 @@ extension Campaign: Validatable {
         try validations.add(\.hostId, .range(1...))
         let accessTypesCount = CampaignAccessibilityType.allCases.count
         try validations.add(\.hostId, .range(0...accessTypesCount - 1))
+        try validations.add(\.startDate, .past || .nil)
         return validations
     }
 }

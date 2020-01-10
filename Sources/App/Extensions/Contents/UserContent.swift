@@ -20,6 +20,7 @@ extension UserContent: Validatable {
         try validations.add(\.firstName, .letters && .count(2...) || .nil)
         try validations.add(\.lastName, .letters && .count(2...) || .nil)
         try validations.add(\.username, .alphanumeric && .contains(.letters) && .count(2...) || .nil)
+        try validations.add(\.registrationDate, .past || .nil)
         return validations
     }
 }

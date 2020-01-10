@@ -26,8 +26,6 @@ extension Validator where T == String {
     }
 }
 
-// MARK: Private
-
 /// Validates whether a string contains any characters from the CharacterSet.
 fileprivate struct ContainsValidator: ValidatorType {
     /// `CharacterSet` to validate against.
@@ -76,5 +74,29 @@ extension CharacterSet {
             desc.append("0-9")
         }
         return desc
+    }
+}
+
+// MARK: - Custom .isPast Validator
+
+extension Validator where T == Date {
+    /// Validates whether a `Date`is in the Past.
+    public static var past: Validator<T> {
+        return IsPastValidator().validator()
+    }
+}
+
+/// Validates whether a date is in the past.
+fileprivate struct IsPastValidator: ValidatorType {
+    /// See `ValidatorType`.
+    public var validatorReadable: String {
+        "date is in the past"
+    }
+
+    /// See `Validator`.
+    public func validate(_ d: Date) throws {
+        guard d < Date() else {
+            throw BasicValidationError("date is not in the past")
+        }
     }
 }
