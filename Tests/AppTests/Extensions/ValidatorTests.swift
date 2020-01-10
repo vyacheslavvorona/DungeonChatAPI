@@ -20,4 +20,10 @@ final class ValidatorTests: XCTestCase {
         XCTAssertThrowsError(try Validator<String>.contains(.letters).validate("#$)*09"))
         XCTAssertThrowsError(try Validator<String>.contains(.uppercaseLetters).validate("yuo"))
     }
+
+    func testPast() throws {
+        try Validator<Date>.past.validate(Date().addingTimeInterval(-500))
+        XCTAssertThrowsError(try Validator<Date>.past.validate(Date()))
+        XCTAssertThrowsError(try Validator<Date>.past.validate(Date().addingTimeInterval(500)))
+    }
 }
