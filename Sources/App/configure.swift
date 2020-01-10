@@ -1,4 +1,4 @@
-import FluentSQLite
+import FluentPostgreSQL
 import Vapor
 import Authentication
 import DungeonChatCore
@@ -6,7 +6,7 @@ import DungeonChatCore
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     // Register providers first
-    try services.register(FluentSQLiteProvider())
+    try services.register(FluentPostgreSQLProvider())
 
     // register Authentication provider
     try services.register(AuthenticationProvider())
@@ -22,20 +22,27 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
 
-    // Configure a SQLite database
-    let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
-//    let sqlite = try SQLiteDatabase(storage: .memory)
+    // Configure a PostgreSQL database
+    let postgresqlConfig = PostgreSQLDatabaseConfig(
+        hostname: CurrentPostgreSQLConfig.hostname,
+        port: CurrentPostgreSQLConfig.port,
+        username: CurrentPostgreSQLConfig.username,
+        database: CurrentPostgreSQLConfig.database,
+        password: CurrentPostgreSQLConfig.password,
+        transport: CurrentPostgreSQLConfig.transport
+    )
+    let postgresql = PostgreSQLDatabase(config: postgresqlConfig)
 
-    // Register the configured SQLite database to the database config.
+    // Register the configured PostgreSQL database to the database config.
     var databases = DatabasesConfig()
-    databases.add(database: sqlite, as: .sqlite)
+    databases.add(database: postgresql, as: .psql)
     services.register(databases)
 
     // Configure migrations
     var migrations = MigrationConfig()
-    migrations.add(model: User.self, database: .sqlite)
-    migrations.add(model: AuthToken.self, database: .sqlite)
-    migrations.add(model: Campaign.self, database: .sqlite)
-    migrations.add(model: CampaignUser.self, database: .sqlite)
+    migrations.add(model: User.self, database: .psql)
+    migrations.add(model: AuthToken.self, database: .psql)
+    migrations.add(model: Campaign.self, database: .psql)
+    migrations.add(model: CampaignUser.self, database: .psql)
     services.register(migrations)
 }

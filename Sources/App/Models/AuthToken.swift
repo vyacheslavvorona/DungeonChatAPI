@@ -6,11 +6,11 @@
 //
 
 import Fluent
-import FluentSQLite
+import FluentPostgreSQL
 import Authentication
 import DungeonChatCore
 
-public final class AuthToken: SQLiteModel {
+public final class AuthToken: PostgreSQLModel {
     public var id: Int?
     private(set) var token: String
     private(set) var userId: User.ID

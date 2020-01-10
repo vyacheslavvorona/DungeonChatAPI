@@ -6,9 +6,9 @@
 //
 
 import Fluent
-import FluentSQLite
+import FluentPostgreSQL
 
-struct CampaignUser: ModifiablePivot, SQLiteModel {
+struct CampaignUser: ModifiablePivot, PostgreSQLModel {
     typealias Left = Campaign
     typealias Right = User
 

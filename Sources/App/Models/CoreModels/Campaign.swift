@@ -7,7 +7,7 @@
 
 import Vapor
 import Fluent
-import FluentSQLite
+import FluentPostgreSQL
 import DungeonChatCore
 
 public final class Campaign: SharedCampaign {
@@ -63,7 +63,7 @@ public final class Campaign: SharedCampaign {
 
 // MARK: - Vapor + Fluent
 
-extension Campaign: SQLiteModel {}
+extension Campaign: PostgreSQLModel {}
 extension Campaign: Migration {}
 extension Campaign: Content {}
 extension Campaign: Parameter {}

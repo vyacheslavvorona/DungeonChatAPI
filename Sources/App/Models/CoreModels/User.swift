@@ -7,7 +7,7 @@
 
 import Vapor
 import Fluent
-import FluentSQLite
+import FluentPostgreSQL
 import Authentication
 import DungeonChatCore
 
@@ -45,7 +45,7 @@ public final class User: SharedUser {
 
 // MARK: - Vapor + Fluent
 
-extension User: SQLiteModel {}
+extension User: PostgreSQLModel {}
 extension User: Migration {}
 extension User: Content {}
 extension User: Parameter {}
