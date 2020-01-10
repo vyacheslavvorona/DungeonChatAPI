@@ -39,9 +39,9 @@ public enum CurrentPostgreSQLConfig {
         }
     }
     
-    static var password: String {
+    static var password: String? {
         switch DungeonConfig.current {
-        case .local: return "skolvanpass42"
+        case .local: return nil
         }
     }
     
