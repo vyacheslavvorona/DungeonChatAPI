@@ -14,9 +14,9 @@ class UserController: RouteCollection {
 
     func boot(router: Router) throws {
         let group = router.grouped("api", "users")
-        group.post(User.self, at: "register", use: registerUserHandler)
+        group.post(User.self, at: "register", use: registerHandler)
         group.post(User.self, at: "login", use: loginHandler)
-        group.get(Int.parameter, use: getHandler)
+        group.get(User.ID.parameter, use: getHandler)
 
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let tokenAuthGroup = group.grouped(tokenAuthMiddleware)
@@ -28,7 +28,7 @@ class UserController: RouteCollection {
 
 private extension UserController {
 
-    func registerUserHandler(_ request: Request, newUser: User) throws -> Future<UserContent> {
+    func registerHandler(_ request: Request, newUser: User) throws -> Future<UserContent> {
         try newUser.validate()
         return User.query(on: request).filter(\.email == newUser.email).first()
             .flatMap { existingUser in
@@ -69,7 +69,7 @@ private extension UserController {
     }
 
     func getHandler(_ request: Request) throws -> Future<UserContent> {
-        let userId = try request.parameters.next(Int.self)
+        let userId = try request.parameters.next(User.ID.self)
         return User.find(userId, on: request)
             .unwrap(or: Abort(.notFound, reason: "No User with specified id"))
             .map { $0.content }
