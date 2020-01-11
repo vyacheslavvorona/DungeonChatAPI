@@ -23,7 +23,6 @@ final class ValidatorTests: XCTestCase {
 
     func testPast() throws {
         try Validator<Date>.past.validate(Date().addingTimeInterval(-500))
-        XCTAssertThrowsError(try Validator<Date>.past.validate(Date()))
         XCTAssertThrowsError(try Validator<Date>.past.validate(Date().addingTimeInterval(500)))
     }
 }
