@@ -18,7 +18,7 @@ extension CampaignContent: Validatable {
         try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces) || .nil)
         try validations.add(\.hostId, .range(1...) || .nil)
         let accessTypesCount = CampaignAccessibilityType.allCases.count
-        try validations.add(\.hostId, .range(0...accessTypesCount - 1) || .nil)
+        try validations.add(\.accessibilityInt, .range(0...accessTypesCount - 1) || .nil)
         try validations.add(\.startDate, .past || .nil)
         return validations
     }
