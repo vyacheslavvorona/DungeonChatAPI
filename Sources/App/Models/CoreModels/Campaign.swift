@@ -75,11 +75,29 @@ extension Campaign: Validatable {
     public static func validations() throws -> Validations<Campaign> {
         var validations = Validations(Campaign.self)
         try validations.add(\.id, .range(1...) || .nil)
-        try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces))
+        try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces) && .contains(.letters))
         try validations.add(\.hostId, .range(1...))
         let accessTypesCount = CampaignAccessibilityType.allCases.count
-        try validations.add(\.hostId, .range(0...accessTypesCount - 1))
+        try validations.add(\.accessibilityInt, .range(0...accessTypesCount - 1))
         try validations.add(\.startDate, .past || .nil)
         return validations
     }
 }
+
+// MARK: - Unit test utilities
+#if DEBUG
+public extension Campaign {
+
+    static func ut_init(name: String, hostId: User.ID) -> Campaign {
+        Campaign(name: name, hostId: hostId)
+    }
+
+    static func ut_init(_ content: CampaignContent, hostId: User.ID) -> Campaign? {
+        Campaign(content, hostId: hostId)
+    }
+
+    func ut_setStartDate(_ date: Date) {
+        startDate = date
+    }
+}
+#endif
