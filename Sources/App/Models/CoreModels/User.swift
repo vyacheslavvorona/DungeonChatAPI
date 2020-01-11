@@ -66,6 +66,7 @@ extension User: Validatable {
     
     public static func validations() throws -> Validations<User> {
         var validations = Validations(User.self)
+        try validations.add(\.id, .range(1...) || .nil)
         try validations.add(\.email, .email)
         try validations.add(\.password, .ascii && .count(5...))
         try validations.add(\.firstName, .letters && .count(2...) || .nil)
@@ -75,3 +76,17 @@ extension User: Validatable {
         return validations
     }
 }
+
+// MARK: - Unit test utilities
+#if DEBUG
+public extension User {
+    
+    static func ut_init(email: String, password: String) -> User {
+        User(email: email, password: password)
+    }
+
+    func ut_setRegistrationDate(_ date: Date) {
+        registrationDate = date
+    }
+}
+#endif

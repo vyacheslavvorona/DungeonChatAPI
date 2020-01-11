@@ -33,6 +33,7 @@ final class CampaignContentTests: XCTestCase {
 
     func testInvalidName() throws {
         XCTAssertThrowsError(try CampaignContent(name: "").validate())
+        XCTAssertThrowsError(try CampaignContent(name: " ").validate())
         XCTAssertThrowsError(try CampaignContent(name: "Bad Name &%").validate())
         XCTAssertThrowsError(try CampaignContent(name: "1 2 3").validate())
     }

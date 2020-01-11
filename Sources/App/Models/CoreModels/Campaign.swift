@@ -74,6 +74,7 @@ extension Campaign: Validatable {
     
     public static func validations() throws -> Validations<Campaign> {
         var validations = Validations(Campaign.self)
+        try validations.add(\.id, .range(1...) || .nil)
         try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces))
         try validations.add(\.hostId, .range(1...))
         let accessTypesCount = CampaignAccessibilityType.allCases.count

@@ -35,6 +35,7 @@ final class UserContentTests: XCTestCase {
     func testInvalidEmail() throws {
         XCTAssertThrowsError(try UserContent(email: "email@test.comemail@test.com").validate())
         XCTAssertThrowsError(try UserContent(email: "").validate())
+        XCTAssertThrowsError(try UserContent(email: " ").validate())
         XCTAssertThrowsError(try UserContent(email: "asd@asd.45").validate())
         XCTAssertThrowsError(try UserContent(email: "@asd.com").validate())
         XCTAssertThrowsError(try UserContent(email: "asd@.com").validate())
@@ -43,19 +44,24 @@ final class UserContentTests: XCTestCase {
 
     func testInvalidFirstName() throws {
         XCTAssertThrowsError(try UserContent(firstName: "").validate())
+        XCTAssertThrowsError(try UserContent(firstName: " ").validate())
+        XCTAssertThrowsError(try UserContent(firstName: "Y").validate())
         XCTAssertThrowsError(try UserContent(firstName: "Petr4").validate())
         XCTAssertThrowsError(try UserContent(firstName: "Oleg&").validate())
     }
 
     func testInvalidLastName() throws {
-        XCTAssertThrowsError(try UserContent(firstName: "").validate())
-        XCTAssertThrowsError(try UserContent(firstName: "Popov92").validate())
-        XCTAssertThrowsError(try UserContent(firstName: "Komarov*").validate())
+        XCTAssertThrowsError(try UserContent(lastName: "").validate())
+        XCTAssertThrowsError(try UserContent(lastName: " ").validate())
+        XCTAssertThrowsError(try UserContent(lastName: "M").validate())
+        XCTAssertThrowsError(try UserContent(lastName: "Popov92").validate())
+        XCTAssertThrowsError(try UserContent(lastName: "Komarov*").validate())
     }
 
     func testInvalidUsername() throws {
-        XCTAssertThrowsError(try UserContent(firstName: "").validate())
-        XCTAssertThrowsError(try UserContent(firstName: "Sasako!").validate())
+        XCTAssertThrowsError(try UserContent(username: "").validate())
+        XCTAssertThrowsError(try UserContent(username: " ").validate())
+        XCTAssertThrowsError(try UserContent(username: "Sasako!").validate())
     }
 
     func testInvalidRegistrationDate() throws {
