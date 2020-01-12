@@ -23,15 +23,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     services.register(middlewares)
 
     // Configure a PostgreSQL database
-    let postgresqlConfig = PostgreSQLDatabaseConfig(
-        hostname: CurrentPostgreSQLConfig.hostname,
-        port: CurrentPostgreSQLConfig.port,
-        username: CurrentPostgreSQLConfig.username,
-        database: CurrentPostgreSQLConfig.database,
-        password: CurrentPostgreSQLConfig.password,
-        transport: CurrentPostgreSQLConfig.transport
-    )
-    let postgresql = PostgreSQLDatabase(config: postgresqlConfig)
+    let postgresql = PostgreSQLDatabase(config: DungeonConfig.postgreSQLConfig(for: env))
 
     // Register the configured PostgreSQL database to the database config.
     var databases = DatabasesConfig()

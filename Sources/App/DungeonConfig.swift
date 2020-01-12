@@ -5,49 +5,40 @@
 //  Created by vorona.vyacheslav on 2020/01/10.
 //
 
+import Vapor
 import FluentPostgreSQL
 
-public enum DungeonConfig {
-    case local
-    
-    static var current: DungeonConfig {
-        return .local
-    }
-}
+enum DungeonConfig {
 
-public enum CurrentPostgreSQLConfig {
-    
-    static var hostname: String {
-        switch DungeonConfig.current {
-        case .local: return "localhost"
-        }
-    }
-    
-    static var port: Int {
-        return 5432
-    }
-    
-    static var username: String {
-        switch DungeonConfig.current {
-        case .local: return "skolvan"
-        }
-    }
-    
-    static var database: String {
-        switch DungeonConfig.current {
-        case .local: return "mydungeon"
-        }
-    }
-    
-    static var password: String? {
-        switch DungeonConfig.current {
-        case .local: return nil
-        }
-    }
-    
-    static var transport: PostgreSQLConnection.TransportConfig {
-        switch DungeonConfig.current {
-        case .local: return .cleartext
+    static func postgreSQLConfig(for env: Environment) -> PostgreSQLDatabaseConfig {
+        switch env {
+        case .development:
+            return PostgreSQLDatabaseConfig(
+                hostname: "localhost",
+                port: 5432,
+                username: "skolvan",
+                database: "mydungeon",
+                password: nil,
+                transport: .cleartext
+            )
+        case .production:
+            return PostgreSQLDatabaseConfig(
+                hostname: "localhost",
+                port: 5432,
+                username: "skolvan",
+                database: "mydungeon",
+                password: nil,
+                transport: .cleartext
+            )
+        default:
+            return PostgreSQLDatabaseConfig(
+                hostname: "localhost",
+                port: 5432,
+                username: "skolvan",
+                database: "mydungeon",
+                password: nil,
+                transport: .cleartext
+            )
         }
     }
 }
