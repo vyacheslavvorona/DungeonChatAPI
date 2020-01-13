@@ -20,6 +20,8 @@ final class CampaignTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
+        try! Application.resetDatabase()
+
         app = try! Application.testable()
         conn = try! app.newConnection(to: .psql).wait()
     }

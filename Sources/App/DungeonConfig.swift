@@ -21,6 +21,15 @@ enum DungeonConfig {
                 password: nil,
                 transport: .cleartext
             )
+        case .testing:
+            return PostgreSQLDatabaseConfig(
+                hostname: "localhost",
+                port: 5432,
+                username: "skolvan",
+                database: "testdungeon",
+                password: nil,
+                transport: .cleartext
+            )
         case .production:
             return PostgreSQLDatabaseConfig(
                 hostname: "localhost",
