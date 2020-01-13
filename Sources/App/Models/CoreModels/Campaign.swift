@@ -99,5 +99,9 @@ public extension Campaign {
     func ut_setStartDate(_ date: Date) {
         startDate = date
     }
+
+    func ut_update(from content: CampaignContent, on conn: DatabaseConnectable) throws -> Future<Campaign> {
+        return try update(from: content, on: conn)
+    }
 }
 #endif

@@ -9,13 +9,31 @@ import Foundation
 import App
 import XCTest
 import DungeonChatCore
+import Vapor
+import FluentPostgreSQL
 
 final class CampaignTests: XCTestCase {
+
+    var app: Application!
+    var conn: PostgreSQLConnection!
+
+    override func setUp() {
+        super.setUp()
+
+        app = try! Application.testable()
+        conn = try! app.newConnection(to: .psql).wait()
+    }
+
+    override func tearDown() {
+        super.tearDown()
+
+        conn.close()
+    }
 
     // MARK: - Initialization
 
     func testInvalidContentInit() {
-        XCTAssert(Campaign.ut_init(CampaignContent(), hostId: 123) == nil)
+        XCTAssertNil(Campaign.ut_init(CampaignContent(), hostId: 123))
     }
 
     func testContentInit() {
@@ -86,5 +104,36 @@ final class CampaignTests: XCTestCase {
         XCTAssertThrowsError(try campaign.validate())
         campaign.accessibilityInt = CampaignAccessibilityType.allCases.count // non existing case
         XCTAssertThrowsError(try campaign.validate())
+    }
+
+    func testUpdateFromContentWithValidHostId() throws {
+        let newHost = try User.save(email: "host@email.com", password: "somepass", on: conn)
+        XCTAssertNotNil(newHost.id)
+
+        let newName = "New name"
+        let newAccessibilityInt = 1
+        let campaign = Campaign.ut_init(name: "Test Campaign 3", hostId: 12)
+        let content = CampaignContent(name: newName, hostId: newHost.id, accessibilityInt: newAccessibilityInt)
+        XCTAssert(campaign.name != newName)
+        XCTAssert(campaign.accessibilityInt != newAccessibilityInt)
+        XCTAssert(campaign.hostId != newHost.id)
+
+        let updated = try campaign.ut_update(from: content, on: conn).wait()
+        XCTAssert(updated.name == newName)
+        XCTAssert(updated.accessibilityInt == newAccessibilityInt)
+        XCTAssert(updated.hostId == newHost.id)
+    }
+
+    func testUpdateFromContentWithInvalidHostId() throws {
+        let newName = "New name"
+        let newAccessibilityInt = 1
+        let newHostId = 800
+        let campaign = Campaign.ut_init(name: "Test Campaign 4", hostId: 13)
+        let content = CampaignContent(name: newName, hostId: newHostId, accessibilityInt: newAccessibilityInt)
+        XCTAssert(campaign.name != newName)
+        XCTAssert(campaign.accessibilityInt != newAccessibilityInt)
+        XCTAssert(campaign.hostId != newHostId)
+
+        XCTAssertThrowsError(try campaign.ut_update(from: content, on: conn).wait())
     }
 }

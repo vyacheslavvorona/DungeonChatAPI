@@ -35,9 +35,7 @@ private extension UserController {
                 guard existingUser == nil else {
                     throw Abort(.badRequest, reason: "A User with this email already exists")
                 }
-
-                let digest = try request.make(BCryptDigest.self)
-                let hashedPassword = try digest.hash(newUser.password)
+                let hashedPassword = try BCrypt.hash(newUser.password)
                 let user = User(email: newUser.email, password: hashedPassword)
                 return user.save(on: request).map { $0.content }
             }
