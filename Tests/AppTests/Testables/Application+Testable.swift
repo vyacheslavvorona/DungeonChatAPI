@@ -26,3 +26,32 @@ extension Application {
         try testable(arguments: ["vapor", "migrate", "-y"]).run()
     }
 }
+
+extension Application {
+    
+    private func request<T: Content>(_ path: String, method: HTTPMethod, headers: HTTPHeaders, body: T?) throws -> Response {
+        let responder = try make(Responder.self)
+        let httpRequest = HTTPRequest(method: method, url: URL(string: path)!, headers: headers)
+        let request = Request(http: httpRequest, using: self)
+        if let body = body {
+            try request.content.encode(body)
+        }
+        return try responder.respond(to: request).wait()
+    }
+    
+    func get<T: Content>(_ path: String, headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try request(path, method: .GET, headers: headers, body: body)
+    }
+    
+    func post<T: Content>(_ path: String, headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try request(path, method: .POST, headers: headers, body: body)
+    }
+    
+    func put<T: Content>(_ path: String, headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try request(path, method: .PUT, headers: headers, body: body)
+    }
+    
+    func delete<T: Content>(_ path: String, headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try request(path, method: .DELETE, headers: headers, body: body)
+    }
+}
