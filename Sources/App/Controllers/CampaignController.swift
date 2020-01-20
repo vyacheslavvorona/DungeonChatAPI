@@ -11,7 +11,7 @@ import DungeonChatCore
 class CampaignController: RouteCollection {
 
     func boot(router: Router) throws {
-        let group = router.grouped("api", "campaigns")
+        let group = router.grouped(DungeonRoutes.Campaign.base.pathCompontent)
         group.get(Campaign.ID.parameter, use: getHandler)
         
         let tokenAuthMiddleware = User.tokenAuthMiddleware()

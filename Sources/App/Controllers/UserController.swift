@@ -13,9 +13,9 @@ import DungeonChatCore
 class UserController: RouteCollection {
 
     func boot(router: Router) throws {
-        let group = router.grouped("api", "users")
-        group.post(User.self, at: "register", use: registerHandler)
-        group.post(User.self, at: "login", use: loginHandler)
+        let group = router.grouped(DungeonRoutes.User.base.pathCompontent)
+        group.post(User.self, at: DungeonRoutes.User.register.pathCompontent, use: registerHandler)
+        group.post(User.self, at: DungeonRoutes.User.login.pathCompontent, use: loginHandler)
         group.get(User.ID.parameter, use: getHandler)
 
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
