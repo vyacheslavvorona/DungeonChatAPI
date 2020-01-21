@@ -195,4 +195,34 @@ final class UserControllerTests: XCTestCase {
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "Wrong password")
     }
+    
+    // MARK: - Get tests
+    
+    private func getCall(by id: User.ID) throws -> Response {
+        var pathComponents = DungeonRoutes.User.base.pathCompontent.convertToPathComponents()
+        pathComponents.append(PathComponent.constant(String(id)))
+        return try app.get(pathComponents, body: Application.Empty.instance)
+    }
+    
+    func testGet_existingUser() throws {
+        let email = "superman@email.com"
+        let password = "superPass1"
+        
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        
+        guard let userId = existingUser.id else {
+            XCTFail("No user id")
+            return
+        }
+        
+        let response = try getCall(by: userId)
+        XCTAssertEqual(response.http.status, .ok)
+
+        let responseBody = try response.content.decode(UserContent.self).wait()
+        XCTAssertEqual(responseBody.id, userId)
+        XCTAssertNil(responseBody.firstName)
+        XCTAssertNil(responseBody.lastName)
+        XCTAssertNil(responseBody.username)
+        XCTAssertLessThan(responseBody.registrationDate!, Date())
+    }
 }

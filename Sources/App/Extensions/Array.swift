@@ -7,7 +7,7 @@
 
 import Routing
 
-extension Array where Element == String {
+public extension Array where Element == String {
     
     var pathCompontent: PathComponentsRepresentable {
         return self as [PathComponentsRepresentable]

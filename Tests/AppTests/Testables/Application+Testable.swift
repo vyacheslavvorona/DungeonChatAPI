@@ -73,3 +73,10 @@ extension Application {
         try delete(pathComponents.readable, headers: headers, body: body)
     }
 }
+
+extension Application {
+    
+    struct Empty: Content {
+       static let instance: Empty? = nil
+    }
+}
