@@ -34,66 +34,58 @@ final class UserControllerTests: XCTestCase {
     
     // MARK: - Registration tests
     
-    private func registerUserCall(with requestBody: User) throws -> Response {
+    private func registerCall(with requestBody: User) throws -> Response {
         let pathComponents = (DungeonRoutes.User.base + DungeonRoutes.User.register).convertToPathComponents()
         return try app.post(pathComponents, body: requestBody)
     }
 
-    func testUserRegistration_onlyEmailAndPassword() throws {
+    func testRegistration_onlyEmailAndPassword() throws {
         let email = "testuser@mail.com"
         
         let requestBody = User.ut_init(email: email, password: "somePassword123")
-        let response = try registerUserCall(with: requestBody)
+        let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .ok)
         
         let responseBody = try response.content.decode(UserContent.self).wait()
-        XCTAssertNotEqual(responseBody.id, nil)
+        XCTAssertNotNil(responseBody.id)
         XCTAssertEqual(responseBody.email, email)
-        XCTAssertEqual(responseBody.firstName, nil)
-        XCTAssertEqual(responseBody.lastName, nil)
-        XCTAssertEqual(responseBody.username, nil)
-        guard let registrationDate = responseBody.registrationDate else {
-            XCTFail("No regisrationDate")
-            return
-        }
-        XCTAssertLessThan(registrationDate, Date())
+        XCTAssertNil(responseBody.firstName)
+        XCTAssertNil(responseBody.lastName)
+        XCTAssertNil(responseBody.username)
+        XCTAssertLessThan(responseBody.registrationDate!, Date())
     }
     
-    func testUserRegistration_allParameters() throws {
+    func testRegistration_allParameters() throws {
         let email = "testuser@mail.com"
         let firstName = "Logen"
         let lastName = "Bloodynine"
-        let username = "Ninefingers"
+        let username = "Ninefingers9"
         
         let requestBody = User.ut_init(email: email, password: "somePassword123")
         requestBody.firstName = firstName
         requestBody.lastName = lastName
         requestBody.username = username
-        let response = try registerUserCall(with: requestBody)
+        let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .ok)
         
         let responseBody = try response.content.decode(UserContent.self).wait()
-        XCTAssertNotEqual(responseBody.id, nil)
+        XCTAssertNotNil(responseBody.id)
         XCTAssertEqual(responseBody.email, email)
         // Not sure how it is going to be later, but for now we only
         // accept email and password during the registration process
-        XCTAssertEqual(responseBody.firstName, nil)
-        XCTAssertEqual(responseBody.lastName, nil)
-        XCTAssertEqual(responseBody.username, nil)
-        guard let registrationDate = responseBody.registrationDate else {
-            XCTFail("No regisrationDate")
-            return
-        }
-        XCTAssertLessThan(registrationDate, Date())
+        XCTAssertNil(responseBody.firstName)
+        XCTAssertNil(responseBody.lastName)
+        XCTAssertNil(responseBody.username)
+        XCTAssertLessThan(responseBody.registrationDate!, Date())
     }
     
     // Validation itself is checked by another test,
     // so we only need to check the content is validated at all
-    func testUserRegistration_invalidContent() throws {
+    func testRegistration_invalidContent() throws {
         let email = "some random string 602*&''"
         
         let requestBody = User.ut_init(email: email, password: "somePassword123")
-        let response = try registerUserCall(with: requestBody)
+        let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .badRequest)
         
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
@@ -101,17 +93,106 @@ final class UserControllerTests: XCTestCase {
         XCTAssertEqual(errorContent.reason, "'email' is not a valid email address")
     }
     
-    func testUserRegistration_existingEmail() throws {
+    func testRegistration_existingEmail() throws {
         let email = "existing@user.net"
         
         try User.save(email: email, password: "l0l0l", on: conn)
         
         let requestBody = User.ut_init(email: email, password: "somePassword123")
-        let response = try registerUserCall(with: requestBody)
+        let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .badRequest)
         
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "A User with this email already exists")
+    }
+    
+    // MARK: - Login tests
+    
+    private func loginCall(with requestBody: User) throws -> Response {
+        let pathComponents = (DungeonRoutes.User.base + DungeonRoutes.User.login).convertToPathComponents()
+        return try app.post(pathComponents, body: requestBody)
+    }
+    
+    func testLogin_existingEmail_correctPassword() throws {
+        let email = "batman@email.com"
+        let password = "batPass00"
+        
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        
+        let requestBody = User.ut_init(email: email, password: password)
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .ok)
+        
+        let responseBody = try response.content.decode(AuthToken.self).wait()
+        XCTAssertNotNil(responseBody.id)
+        XCTAssertNotNil(responseBody.userId)
+        XCTAssertEqual(responseBody.userId, existingUser.id)
+        XCTAssertLessThan(responseBody.authDate, Date())
+    }
+    
+    func testLogin_existingEmail_correctPassword_extraParameters() throws {
+        let email = "batman@email.com"
+        let password = "batPass00"
+        
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        
+        let requestBody = User.ut_init(email: email, password: password)
+        requestBody.firstName = "Bat"
+        requestBody.lastName = "Man"
+        requestBody.username = "Batman"
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .ok)
+        
+        let responseBody = try response.content.decode(AuthToken.self).wait()
+        XCTAssertNotNil(responseBody.id)
+        XCTAssertNotNil(responseBody.userId)
+        XCTAssertEqual(responseBody.userId, existingUser.id)
+        XCTAssertLessThan(responseBody.authDate, Date())
+        
+        guard let userId = existingUser.id,
+            let savedUser = try User.find(userId, on: conn).wait() else {
+            XCTFail("No user in database")
+            return
+        }
+        
+        XCTAssertNil(savedUser.firstName)
+        XCTAssertNil(savedUser.lastName)
+        XCTAssertNil(savedUser.username)
+    }
+    
+    func testLogin_invalidEmail() throws {
+        let requestBody = User.ut_init(email: "wrong-email-81212", password: "somepass123")
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .badRequest)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "Wrong email format")
+    }
+    
+    func testLogin_emailNotExist() throws {
+        let requestBody = User.ut_init(email: "batman1@email.com", password: "batPass01")
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .notFound)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "No User with specified email")
+    }
+    
+    func testLogin_existingEmail_incorrectPassword() throws {
+        let email = "batman@email.com"
+        let password = "batPass00"
+        
+        try User.save(email: email, password: "wronggg00", on: conn)
+        
+        let requestBody = User.ut_init(email: email, password: password)
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .unauthorized)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "Wrong password")
     }
 }
