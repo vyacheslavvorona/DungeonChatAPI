@@ -11,6 +11,7 @@ import Authentication
 
 extension User {
 
+    @discardableResult
     static func save(
         email: String,
         password: String,
