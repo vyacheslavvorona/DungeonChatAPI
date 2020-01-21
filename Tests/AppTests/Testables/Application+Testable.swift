@@ -54,4 +54,22 @@ extension Application {
     func delete<T: Content>(_ path: String, headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
         try request(path, method: .DELETE, headers: headers, body: body)
     }
+    
+    // Using PathComponents
+    
+    func get<T: Content>(_ pathComponents: [PathComponent], headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try get(pathComponents.readable, headers: headers, body: body)
+    }
+    
+    func post<T: Content>(_ pathComponents: [PathComponent], headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try post(pathComponents.readable, headers: headers, body: body)
+    }
+    
+    func put<T: Content>(_ pathComponents: [PathComponent], headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try put(pathComponents.readable, headers: headers, body: body)
+    }
+    
+    func delete<T: Content>(_ pathComponents: [PathComponent], headers: HTTPHeaders = HTTPHeaders(), body: T?) throws -> Response {
+        try delete(pathComponents.readable, headers: headers, body: body)
+    }
 }
