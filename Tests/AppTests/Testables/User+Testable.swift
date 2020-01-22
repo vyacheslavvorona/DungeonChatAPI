@@ -8,6 +8,7 @@
 import App
 import FluentPostgreSQL
 import Authentication
+import Random
 
 extension User {
 
@@ -26,5 +27,13 @@ extension User {
         user.lastName = lastName
         user.username = username
         return try user.save(on: conn).wait()
+    }
+    
+    @discardableResult
+    func authorize(on conn: PostgreSQLConnection) throws -> AuthToken {
+        guard let id = id else { throw TestError(message: "No user id") }
+        let tokenString = try URandom().generateData(count: 32).base64EncodedString()
+        let token = AuthToken(token: tokenString, userId: id)
+        return try token.save(on: conn).wait()
     }
 }

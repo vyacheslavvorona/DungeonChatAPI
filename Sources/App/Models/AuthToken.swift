@@ -20,9 +20,13 @@ public final class AuthToken: PostgreSQLModel {
         parent(\.userId)
     }
 
-    init(token: String, userId: User.ID) {
+    public init(token: String, userId: User.ID) {
         self.token = token
         self.userId = userId
+    }
+    
+    public var headerValue: String {
+        "Bearer \(token)"
     }
 }
 

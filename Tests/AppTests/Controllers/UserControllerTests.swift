@@ -225,4 +225,33 @@ final class UserControllerTests: XCTestCase {
         XCTAssertNil(responseBody.username)
         XCTAssertLessThan(responseBody.registrationDate!, Date())
     }
+    
+    func testGet_nonExistingUser() throws {
+        let response = try getCall(by: 999)
+        XCTAssertEqual(response.http.status, .notFound)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "No User with specified id")
+    }
+    
+    // MARK: - Update tests
+    
+    private func updateCall(with requestBody: UserContent, token: AuthToken? = nil) throws -> Response {
+        let pathComponents = DungeonRoutes.User.base.pathCompontent.convertToPathComponents()
+        var headers = HTTPHeaders()
+        if let token = token {
+            headers.add(name: "Authorization", value: token.headerValue)
+        }
+        return try app.put(pathComponents, body: requestBody)
+    }
+    
+    func testUpdate_authorized_fullContent() throws {
+        let email = "spiderman@email.com"
+        let password = "spiderPass00"
+        
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        let token = try existingUser.authorize(on: conn)
+        
+    }
 }
