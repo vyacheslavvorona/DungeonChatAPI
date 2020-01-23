@@ -24,10 +24,6 @@ public final class AuthToken: PostgreSQLModel {
         self.token = token
         self.userId = userId
     }
-    
-    public var headerValue: String {
-        "Bearer \(token)"
-    }
 }
 
 // MARK: - Vapor + Fluent

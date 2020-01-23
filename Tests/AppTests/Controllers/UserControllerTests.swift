@@ -243,15 +243,58 @@ final class UserControllerTests: XCTestCase {
         if let token = token {
             headers.add(name: "Authorization", value: token.headerValue)
         }
-        return try app.put(pathComponents, body: requestBody)
+        return try app.put(pathComponents, headers: headers, body: requestBody)
     }
     
     func testUpdate_authorized_fullContent() throws {
         let email = "spiderman@email.com"
         let password = "spiderPass00"
-        
-        let existingUser = try User.save(email: email, password: password, on: conn)
+
+        let existingUser = User.ut_init(email: email, password: password)
+        existingUser.firstName = "First"
+        existingUser.lastName = "Last"
+        existingUser.username = "xXxSpiderManxXx777"
+        _ = try existingUser.save(on: conn).wait()
+
         let token = try existingUser.authorize(on: conn)
+
+        let newId = 666
+        let newEmail = "spudirwoman@email.com"
+        let newFirstName = "Third"
+        let newLastName = "Forth"
+        let newUsername = "WoMaN111"
+        let newRegistrationDate = Date().addingTimeInterval(-500)
+
+        let updateContent = UserContent(
+            id: newId,
+            email: newEmail,
+            firstName: newFirstName,
+            lastName: newLastName,
+            username: newUsername,
+            registrationDate: newRegistrationDate
+        )
+
+        let response = try updateCall(with: updateContent, token: token)
+        XCTAssertEqual(response.http.status, .ok)
+
+        let responseBody = try response.content.decode(UserContent.self).wait()
+        XCTAssertNotNil(responseBody.id)
+        XCTAssertEqual(responseBody.id, existingUser.id)
+        XCTAssertNotEqual(responseBody.id, newId)
+        XCTAssertEqual(responseBody.email, newEmail)
+        XCTAssertEqual(responseBody.firstName, newFirstName)
+        XCTAssertEqual(responseBody.lastName, newLastName)
+        XCTAssertEqual(responseBody.username, newUsername)
+        XCTAssertNotNil(responseBody.registrationDate)
         
+        print("new", newRegistrationDate)
+        print("existing", existingUser.registrationDate)
+        
+        let one = responseBody.registrationDate!
+        let two = existingUser.registrationDate!
+        
+        // need to compare without seconds
+        XCTAssertEqual(responseBody.registrationDate!, existingUser.registrationDate!)
+        XCTAssertNotEqual(responseBody.registrationDate!, newRegistrationDate)
     }
 }
