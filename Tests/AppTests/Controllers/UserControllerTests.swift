@@ -286,15 +286,7 @@ final class UserControllerTests: XCTestCase {
         XCTAssertEqual(responseBody.lastName, newLastName)
         XCTAssertEqual(responseBody.username, newUsername)
         XCTAssertNotNil(responseBody.registrationDate)
-        
-        print("new", newRegistrationDate)
-        print("existing", existingUser.registrationDate)
-        
-        let one = responseBody.registrationDate!
-        let two = existingUser.registrationDate!
-        
-        // need to compare without seconds
-        XCTAssertEqual(responseBody.registrationDate!, existingUser.registrationDate!)
-        XCTAssertNotEqual(responseBody.registrationDate!, newRegistrationDate)
+        XCTAssert(responseBody.registrationDate! =~~ existingUser.registrationDate!)
+        XCTAssert(responseBody.registrationDate! !=~~ newRegistrationDate)
     }
 }
