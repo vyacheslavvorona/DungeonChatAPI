@@ -391,4 +391,27 @@ final class UserControllerTests: XCTestCase {
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
     }
+    
+    func testUpdate_wrongToken() throws {
+        let email = "spiderman@email.com"
+        let password = "spiderPass00"
+        let wrongTokenString = "zBzpirY2HYQK3HI9g25NSt7qtVUI0z7EIhxEsrMA/04="
+
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        guard let userId = existingUser.id else {
+            XCTFail("No User id")
+            return
+        }
+
+        let token = try existingUser.authorize(on: conn)
+        let wrongToken = AuthToken(token: wrongTokenString, userId: userId)
+        XCTAssertNotEqual(token.token, wrongToken.token)
+        
+        let response = try updateCall(with: UserContent(), token: wrongToken)
+        XCTAssertEqual(response.http.status, .unauthorized)
+
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
+    }
 }
