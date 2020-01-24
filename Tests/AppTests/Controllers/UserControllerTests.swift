@@ -126,6 +126,7 @@ final class UserControllerTests: XCTestCase {
         
         let responseBody = try response.content.decode(AuthToken.self).wait()
         XCTAssertNotNil(responseBody.id)
+        XCTAssert(!responseBody.token.isEmpty)
         XCTAssertNotNil(responseBody.userId)
         XCTAssertEqual(responseBody.userId, existingUser.id)
         XCTAssertLessThan(responseBody.authDate, Date())
@@ -194,6 +195,65 @@ final class UserControllerTests: XCTestCase {
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "Wrong password")
+    }
+    
+    func testTokenSaved() throws {
+        let email = "batman@email.com"
+        let password = "batPass00"
+        
+        try User.save(email: email, password: password, on: conn)
+        
+        let requestBody = User.ut_init(email: email, password: password)
+        let response = try loginCall(with: requestBody)
+        XCTAssertEqual(response.http.status, .ok)
+        
+        let responseBody = try response.content.decode(AuthToken.self).wait()
+        guard let tokenId = responseBody.id else {
+            XCTFail("No AuthToken id")
+            return
+        }
+        
+        let databaseToken = try AuthToken.find(tokenId, on: conn).wait()
+        XCTAssertNotNil(databaseToken)
+        XCTAssertEqual(databaseToken?.token, responseBody.token)
+    }
+    
+    func testOldTokenDeleted() throws {
+        let email = "batman@email.com"
+        let password = "batPass00"
+        
+        try User.save(email: email, password: password, on: conn)
+        
+        let requestBody = User.ut_init(email: email, password: password)
+        
+        let response1 = try loginCall(with: requestBody)
+        XCTAssertEqual(response1.http.status, .ok)
+        
+        let responseBody1 = try response1.content.decode(AuthToken.self).wait()
+        guard let tokenId1 = responseBody1.id else {
+            XCTFail("No AuthToken id")
+            return
+        }
+        
+        let databaseToken1 = try AuthToken.find(tokenId1, on: conn).wait()
+        let oldToken = databaseToken1?.token
+        XCTAssertNotNil(oldToken)
+        
+        let response2 = try loginCall(with: requestBody)
+        XCTAssertEqual(response2.http.status, .ok)
+        
+        let responseBody2 = try response2.content.decode(AuthToken.self).wait()
+        guard let tokenId2 = responseBody2.id else {
+            XCTFail("No AuthToken id")
+            return
+        }
+        
+        let databaseToken2 = try AuthToken.find(tokenId2, on: conn).wait()
+        XCTAssertNotNil(databaseToken2?.token)
+        XCTAssertNotEqual(databaseToken2?.token, oldToken)
+        
+        let deletedToken = try AuthToken.find(tokenId1, on: conn).wait()
+        XCTAssertNil(deletedToken)
     }
     
     // MARK: - Get tests
@@ -288,5 +348,47 @@ final class UserControllerTests: XCTestCase {
         XCTAssertNotNil(responseBody.registrationDate)
         XCTAssert(responseBody.registrationDate! =~~ existingUser.registrationDate!)
         XCTAssert(responseBody.registrationDate! !=~~ newRegistrationDate)
+    }
+    
+    func testUpdate_authorized_emptyContent() throws {
+        let email = "spiderman@email.com"
+        let password = "spiderPass00"
+        let firstName = "First"
+        let lastName = "Last"
+        let username = "xXxSpiderManxXx777"
+
+        let existingUser = User.ut_init(email: email, password: password)
+        existingUser.firstName = firstName
+        existingUser.lastName = lastName
+        existingUser.username = username
+        _ = try existingUser.save(on: conn).wait()
+
+        let token = try existingUser.authorize(on: conn)
+
+        let response = try updateCall(with: UserContent(), token: token)
+        XCTAssertEqual(response.http.status, .ok)
+
+        let responseBody = try response.content.decode(UserContent.self).wait()
+        XCTAssertNotNil(responseBody.id)
+        XCTAssertEqual(responseBody.id, existingUser.id)
+        XCTAssertEqual(responseBody.email, email)
+        XCTAssertEqual(responseBody.firstName, firstName)
+        XCTAssertEqual(responseBody.lastName, lastName)
+        XCTAssertEqual(responseBody.username, username)
+        XCTAssert(responseBody.registrationDate! =~~ existingUser.registrationDate!)
+    }
+    
+    func testUpdate_noToken() throws {
+        let email = "spiderman@email.com"
+        let password = "spiderPass00"
+
+        try User.save(email: email, password: password, on: conn)
+
+        let response = try updateCall(with: UserContent())
+        XCTAssertEqual(response.http.status, .unauthorized)
+
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
     }
 }
