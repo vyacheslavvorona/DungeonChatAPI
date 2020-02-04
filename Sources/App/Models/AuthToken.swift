@@ -16,7 +16,7 @@ public final class AuthToken: PostgreSQLModel {
     public private(set) var userId: User.ID
     public private(set) var authDate: Date = Date()
 
-    var user: Parent<AuthToken, User> {
+    public var user: Parent<AuthToken, User> {
         parent(\.userId)
     }
 

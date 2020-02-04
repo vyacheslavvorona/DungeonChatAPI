@@ -36,4 +36,17 @@ extension User {
         let token = AuthToken(token: tokenString, userId: id)
         return try token.save(on: conn).wait()
     }
+    
+    @discardableResult
+    static func saveAndAuthorize(
+        email: String,
+        password: String,
+        firstName: String? = nil,
+        lastName: String? = nil,
+        username: String? = nil,
+        on conn: PostgreSQLConnection
+    ) throws -> AuthToken {
+        let savedUser = try save(email: email, password: password, firstName: firstName, lastName: lastName, username: username, on: conn)
+        return try savedUser.authorize(on: conn)
+    }
 }

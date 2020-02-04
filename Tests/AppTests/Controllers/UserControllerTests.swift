@@ -307,16 +307,15 @@ final class UserControllerTests: XCTestCase {
     }
     
     func testUpdate_authorized_fullContent() throws {
-        let email = "spiderman@email.com"
-        let password = "spiderPass00"
-
-        let existingUser = User.ut_init(email: email, password: password)
-        existingUser.firstName = "First"
-        existingUser.lastName = "Last"
-        existingUser.username = "xXxSpiderManxXx777"
-        _ = try existingUser.save(on: conn).wait()
-
-        let token = try existingUser.authorize(on: conn)
+        let token = try User.saveAndAuthorize(
+            email: "spiderman@email.com",
+            password: "spiderPass00",
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
 
         let newId = 666
         let newEmail = "spudirwoman@email.com"
@@ -356,14 +355,16 @@ final class UserControllerTests: XCTestCase {
         let firstName = "First"
         let lastName = "Last"
         let username = "xXxSpiderManxXx777"
-
-        let existingUser = User.ut_init(email: email, password: password)
-        existingUser.firstName = firstName
-        existingUser.lastName = lastName
-        existingUser.username = username
-        _ = try existingUser.save(on: conn).wait()
-
-        let token = try existingUser.authorize(on: conn)
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: firstName,
+            lastName: lastName,
+            username: username,
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
 
         let response = try updateCall(with: UserContent(), token: token)
         XCTAssertEqual(response.http.status, .ok)
@@ -396,15 +397,16 @@ final class UserControllerTests: XCTestCase {
         let email = "spiderman@email.com"
         let password = "spiderPass00"
         let wrongTokenString = "zBzpirY2HYQK3HI9g25NSt7qtVUI0z7EIhxEsrMA/04="
-
-        let existingUser = try User.save(email: email, password: password, on: conn)
-        guard let userId = existingUser.id else {
-            XCTFail("No User id")
-            return
-        }
-
-        let token = try existingUser.authorize(on: conn)
-        let wrongToken = AuthToken(token: wrongTokenString, userId: userId)
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
+        XCTAssertNotNil(existingUser.id)
+        
+        let wrongToken = AuthToken(token: wrongTokenString, userId: existingUser.id!)
         XCTAssertNotEqual(token.token, wrongToken.token)
         
         let response = try updateCall(with: UserContent(), token: wrongToken)
@@ -418,14 +420,15 @@ final class UserControllerTests: XCTestCase {
     func testUpdate_invalidContent() throws {
         let email = "spiderman666@email.com"
         let password = "spiderPass11"
-
-        let existingUser = User.ut_init(email: email, password: password)
-        existingUser.firstName = "First"
-        existingUser.lastName = "Last"
-        existingUser.username = "xXxSpiderManxXx777"
-        _ = try existingUser.save(on: conn).wait()
-
-        let token = try existingUser.authorize(on: conn)
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
 
         let newId = 666
         let newEmail = "spudirwoman@email.com"
