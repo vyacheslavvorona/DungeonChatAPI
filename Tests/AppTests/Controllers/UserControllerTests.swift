@@ -414,4 +414,47 @@ final class UserControllerTests: XCTestCase {
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
     }
+    
+    func testUpdate_invalidContent() throws {
+        let email = "spiderman666@email.com"
+        let password = "spiderPass11"
+
+        let existingUser = User.ut_init(email: email, password: password)
+        existingUser.firstName = "First"
+        existingUser.lastName = "Last"
+        existingUser.username = "xXxSpiderManxXx777"
+        _ = try existingUser.save(on: conn).wait()
+
+        let token = try existingUser.authorize(on: conn)
+
+        let newId = 666
+        let newEmail = "spudirwoman@email.com"
+        let newFirstName = "23984"
+        let newLastName = "()()())"
+        let newUsername = "    "
+        let newRegistrationDate = Date().addingTimeInterval(500)
+
+        let updateContent = UserContent(
+            id: newId,
+            email: newEmail,
+            firstName: newFirstName,
+            lastName: newLastName,
+            username: newUsername,
+            registrationDate: newRegistrationDate
+        )
+
+        let response = try updateCall(with: updateContent, token: token)
+        XCTAssertEqual(response.http.status, .badRequest)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        
+        // is checked in validation tests, but just in case
+        let expectedReason = "'firstName' contains an invalid character: '2' (allowed: A-Z, a-z) and 'firstName' is not nil, "
+            + "'lastName' contains an invalid character: '(' (allowed: A-Z, a-z) and 'lastName' is not nil, "
+            + "'username' contains an invalid character: ' ' (allowed: A-Z, a-z, 0-9) "
+            + "and 'username' should contain characters from: (A-Z, a-z) and 'username' is not nil, "
+            + "'registrationDate' date is not in the past and 'registrationDate' is not nil"
+        XCTAssertEqual(errorContent.reason, expectedReason)
+    }
 }
