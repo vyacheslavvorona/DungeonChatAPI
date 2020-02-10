@@ -12,15 +12,15 @@ import DungeonChatCore
 
 public final class AuthToken: PostgreSQLModel {
     public var id: Int?
-    public private(set) var token: String
-    public private(set) var userId: User.ID
-    public private(set) var authDate: Date = Date()
+    private(set) var token: String
+    private(set) var userId: User.ID
+    private(set) var authDate: Date = Date()
 
-    public var user: Parent<AuthToken, User> {
+    var user: Parent<AuthToken, User> {
         parent(\.userId)
     }
 
-    public init(token: String, userId: User.ID) {
+    init(token: String, userId: User.ID) {
         self.token = token
         self.userId = userId
     }

@@ -5,7 +5,7 @@
 //  Created by vorona.vyacheslav on 2020/01/20.
 //
 
-import App
+@testable import App
 import XCTest
 import Validation
 import DungeonChatCore
@@ -42,7 +42,7 @@ final class UserControllerTests: XCTestCase {
     func testRegistration_onlyEmailAndPassword() throws {
         let email = "testuser@mail.com"
         
-        let requestBody = User.ut_init(email: email, password: "somePassword123")
+        let requestBody = User(email: email, password: "somePassword123")
         let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .ok)
         
@@ -61,7 +61,7 @@ final class UserControllerTests: XCTestCase {
         let lastName = "Bloodynine"
         let username = "Ninefingers9"
         
-        let requestBody = User.ut_init(email: email, password: "somePassword123")
+        let requestBody = User(email: email, password: "somePassword123")
         requestBody.firstName = firstName
         requestBody.lastName = lastName
         requestBody.username = username
@@ -84,7 +84,7 @@ final class UserControllerTests: XCTestCase {
     func testRegistration_invalidContent() throws {
         let email = "some random string 602*&''"
         
-        let requestBody = User.ut_init(email: email, password: "somePassword123")
+        let requestBody = User(email: email, password: "somePassword123")
         let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .badRequest)
         
@@ -98,7 +98,7 @@ final class UserControllerTests: XCTestCase {
         
         try User.save(email: email, password: "l0l0l", on: conn)
         
-        let requestBody = User.ut_init(email: email, password: "somePassword123")
+        let requestBody = User(email: email, password: "somePassword123")
         let response = try registerCall(with: requestBody)
         XCTAssertEqual(response.http.status, .badRequest)
         
@@ -120,7 +120,7 @@ final class UserControllerTests: XCTestCase {
         
         let existingUser = try User.save(email: email, password: password, on: conn)
         
-        let requestBody = User.ut_init(email: email, password: password)
+        let requestBody = User(email: email, password: password)
         let response = try loginCall(with: requestBody)
         XCTAssertEqual(response.http.status, .ok)
         
@@ -138,7 +138,7 @@ final class UserControllerTests: XCTestCase {
         
         let existingUser = try User.save(email: email, password: password, on: conn)
         
-        let requestBody = User.ut_init(email: email, password: password)
+        let requestBody = User(email: email, password: password)
         requestBody.firstName = "Bat"
         requestBody.lastName = "Man"
         requestBody.username = "Batman"
@@ -163,7 +163,7 @@ final class UserControllerTests: XCTestCase {
     }
     
     func testLogin_invalidEmail() throws {
-        let requestBody = User.ut_init(email: "wrong-email-81212", password: "somepass123")
+        let requestBody = User(email: "wrong-email-81212", password: "somepass123")
         let response = try loginCall(with: requestBody)
         XCTAssertEqual(response.http.status, .badRequest)
         
@@ -173,7 +173,7 @@ final class UserControllerTests: XCTestCase {
     }
     
     func testLogin_emailNotExist() throws {
-        let requestBody = User.ut_init(email: "batman1@email.com", password: "batPass01")
+        let requestBody = User(email: "batman1@email.com", password: "batPass01")
         let response = try loginCall(with: requestBody)
         XCTAssertEqual(response.http.status, .notFound)
         
@@ -188,7 +188,7 @@ final class UserControllerTests: XCTestCase {
         
         try User.save(email: email, password: "wronggg00", on: conn)
         
-        let requestBody = User.ut_init(email: email, password: password)
+        let requestBody = User(email: email, password: password)
         let response = try loginCall(with: requestBody)
         XCTAssertEqual(response.http.status, .unauthorized)
         
@@ -203,7 +203,7 @@ final class UserControllerTests: XCTestCase {
         
         try User.save(email: email, password: password, on: conn)
         
-        let requestBody = User.ut_init(email: email, password: password)
+        let requestBody = User(email: email, password: password)
         let response = try loginCall(with: requestBody)
         XCTAssertEqual(response.http.status, .ok)
         
@@ -224,7 +224,7 @@ final class UserControllerTests: XCTestCase {
         
         try User.save(email: email, password: password, on: conn)
         
-        let requestBody = User.ut_init(email: email, password: password)
+        let requestBody = User(email: email, password: password)
         
         let response1 = try loginCall(with: requestBody)
         XCTAssertEqual(response1.http.status, .ok)

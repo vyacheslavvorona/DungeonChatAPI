@@ -10,14 +10,14 @@ import Fluent
 import FluentPostgreSQL
 import DungeonChatCore
 
-public final class Campaign: SharedCampaign {
+final class Campaign: SharedCampaign {
     
     // Shared fields
-    public var id: Int?
-    public var name: String
-    public var hostId: User.ID
-    public var startDate: Date? = Date()
-    public var accessibilityInt: Int = 0
+    var id: Int?
+    var name: String
+    var hostId: User.ID
+    var startDate: Date? = Date()
+    var accessibilityInt: Int = 0
     
     var host: Parent<Campaign, User> {
         parent(\.hostId)
@@ -84,24 +84,12 @@ extension Campaign: Validatable {
     }
 }
 
-// MARK: - Unit test utilities
 #if DEBUG
-public extension Campaign {
-
-    static func ut_init(name: String, hostId: User.ID) -> Campaign {
-        Campaign(name: name, hostId: hostId)
-    }
-
-    static func ut_init(_ content: CampaignContent, hostId: User.ID) -> Campaign? {
-        Campaign(content, hostId: hostId)
-    }
+// MARK: - Unit test utilities
+extension Campaign {
 
     func ut_setStartDate(_ date: Date) {
         startDate = date
-    }
-
-    func ut_update(from content: CampaignContent, on conn: DatabaseConnectable) throws -> Future<Campaign> {
-        return try update(from: content, on: conn)
     }
 }
 #endif

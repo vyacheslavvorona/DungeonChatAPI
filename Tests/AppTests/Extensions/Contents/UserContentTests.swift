@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import App
+@ testable import App
 import XCTest
 import DungeonChatCore
 

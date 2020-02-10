@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import App
+@ testable import App
 import XCTest
 import DungeonChatCore
 import Vapor
@@ -35,7 +35,7 @@ final class CampaignTests: XCTestCase {
     // MARK: - Initialization
 
     func testInvalidContentInit() {
-        XCTAssertNil(Campaign.ut_init(CampaignContent(), hostId: 123))
+        XCTAssertNil(Campaign(CampaignContent(), hostId: 123))
     }
 
     func testContentInit() {
@@ -44,7 +44,7 @@ final class CampaignTests: XCTestCase {
             return
         }
         let content = CampaignContent(name: "Campaign Name 3", accessibilityInt: accessibilityInt)
-        guard let campaign = Campaign.ut_init(content, hostId: 123) else {
+        guard let campaign = Campaign(content, hostId: 123) else {
             XCTFail("Campaign is not created")
             return
         }
@@ -54,17 +54,17 @@ final class CampaignTests: XCTestCase {
     // MARK: - Validation
 
     func testCompleteModel() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         campaign.accessibilityInt = 1
         try campaign.validate()
     }
 
     func testMinimalModel() throws {
-        try Campaign.ut_init(name: "My Campaign 9000", hostId: 99).validate()
+        try Campaign(name: "My Campaign 9000", hostId: 99).validate()
     }
 
     func testInvalidId() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         campaign.id = 0
         XCTAssertThrowsError(try campaign.validate())
         campaign.id = -25
@@ -72,14 +72,14 @@ final class CampaignTests: XCTestCase {
     }
 
     func testInvalidName() throws {
-        XCTAssertThrowsError(try Campaign.ut_init(name: "", hostId: 99).validate())
-        XCTAssertThrowsError(try Campaign.ut_init(name: " ", hostId: 99).validate())
-        XCTAssertThrowsError(try Campaign.ut_init(name: "My Campaign 9000!!", hostId: 99).validate())
-        XCTAssertThrowsError(try Campaign.ut_init(name: "1 2 3", hostId: 99).validate())
+        XCTAssertThrowsError(try Campaign(name: "", hostId: 99).validate())
+        XCTAssertThrowsError(try Campaign(name: " ", hostId: 99).validate())
+        XCTAssertThrowsError(try Campaign(name: "My Campaign 9000!!", hostId: 99).validate())
+        XCTAssertThrowsError(try Campaign(name: "1 2 3", hostId: 99).validate())
     }
 
     func testInvalidHostId() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         campaign.hostId = 0
         XCTAssertThrowsError(try campaign.validate())
         campaign.hostId = -33
@@ -87,13 +87,13 @@ final class CampaignTests: XCTestCase {
     }
 
     func testInvalidStartDate() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         campaign.ut_setStartDate(Date().addingTimeInterval(500))
         XCTAssertThrowsError(try campaign.validate())
     }
 
     func testCampaignAccessibilityTypeCases() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         try CampaignAccessibilityType.allCases.forEach { type in
             campaign.accessibilityInt = type.rawValue
             try campaign.validate()
@@ -101,7 +101,7 @@ final class CampaignTests: XCTestCase {
     }
 
     func testInvalidAccessibilityInt() throws {
-        let campaign = Campaign.ut_init(name: "My Campaign 9000", hostId: 99)
+        let campaign = Campaign(name: "My Campaign 9000", hostId: 99)
         campaign.accessibilityInt = -2
         XCTAssertThrowsError(try campaign.validate())
         campaign.accessibilityInt = CampaignAccessibilityType.allCases.count // non existing case
@@ -114,13 +114,13 @@ final class CampaignTests: XCTestCase {
 
         let newName = "New name"
         let newAccessibilityInt = 1
-        let campaign = Campaign.ut_init(name: "Test Campaign 3", hostId: 12)
+        let campaign = Campaign(name: "Test Campaign 3", hostId: 12)
         let content = CampaignContent(name: newName, hostId: newHost.id, accessibilityInt: newAccessibilityInt)
         XCTAssert(campaign.name != newName)
         XCTAssert(campaign.accessibilityInt != newAccessibilityInt)
         XCTAssert(campaign.hostId != newHost.id)
 
-        let updated = try campaign.ut_update(from: content, on: conn).wait()
+        let updated = try campaign.update(from: content, on: conn).wait()
         XCTAssert(updated.name == newName)
         XCTAssert(updated.accessibilityInt == newAccessibilityInt)
         XCTAssert(updated.hostId == newHost.id)
@@ -130,12 +130,12 @@ final class CampaignTests: XCTestCase {
         let newName = "New name"
         let newAccessibilityInt = 1
         let newHostId = 800
-        let campaign = Campaign.ut_init(name: "Test Campaign 4", hostId: 13)
+        let campaign = Campaign(name: "Test Campaign 4", hostId: 13)
         let content = CampaignContent(name: newName, hostId: newHostId, accessibilityInt: newAccessibilityInt)
         XCTAssert(campaign.name != newName)
         XCTAssert(campaign.accessibilityInt != newAccessibilityInt)
         XCTAssert(campaign.hostId != newHostId)
 
-        XCTAssertThrowsError(try campaign.ut_update(from: content, on: conn).wait())
+        XCTAssertThrowsError(try campaign.update(from: content, on: conn).wait())
     }
 }

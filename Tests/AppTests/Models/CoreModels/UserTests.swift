@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import App
+@ testable import App
 import XCTest
 import DungeonChatCore
 
@@ -15,7 +15,7 @@ final class UserTests: XCTestCase {
     // MARK: - Validation
 
     func testCompleteModel() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.id = 22
         user.firstName = "Andrey"
         user.lastName = "Govnenko"
@@ -24,11 +24,11 @@ final class UserTests: XCTestCase {
     }
 
     func testMinimalModel() throws {
-        try User.ut_init(email: "opop@test.com", password: "qwerty").validate()
+        try User(email: "opop@test.com", password: "qwerty").validate()
     }
 
     func testInvalidId() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.id = 0
         XCTAssertThrowsError(try user.validate())
         user.id = -123
@@ -36,24 +36,24 @@ final class UserTests: XCTestCase {
     }
 
     func testInvalidEmail() throws {
-        XCTAssertThrowsError(try User.ut_init(email: "some string", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "email@test.comemail@test.com", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: " ", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "asd@asd.45", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "@asd.com", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "asd@.com", password: "lalo4ka$").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "asd@asd.", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "some string", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "email@test.comemail@test.com", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: " ", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "asd@asd.45", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "@asd.com", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "asd@.com", password: "lalo4ka$").validate())
+        XCTAssertThrowsError(try User(email: "asd@asd.", password: "lalo4ka$").validate())
     }
 
     func testInvalidPassword() throws {
-        XCTAssertThrowsError(try User.ut_init(email: "email@test.com", password: "a24!").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "email@test.com", password: "").validate())
-        XCTAssertThrowsError(try User.ut_init(email: "email@test.com", password: "  ").validate())
+        XCTAssertThrowsError(try User(email: "email@test.com", password: "a24!").validate())
+        XCTAssertThrowsError(try User(email: "email@test.com", password: "").validate())
+        XCTAssertThrowsError(try User(email: "email@test.com", password: "  ").validate())
     }
 
     func testInvalidFirstName() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.firstName = ""
         XCTAssertThrowsError(try user.validate())
         user.firstName = " "
@@ -71,7 +71,7 @@ final class UserTests: XCTestCase {
     }
 
     func testInvalidLastName() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.lastName = ""
         XCTAssertThrowsError(try user.validate())
         user.lastName = "  "
@@ -89,7 +89,7 @@ final class UserTests: XCTestCase {
     }
 
     func testInvalidSUsername() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.username = ""
         XCTAssertThrowsError(try user.validate())
         user.username = "  "
@@ -105,7 +105,7 @@ final class UserTests: XCTestCase {
     }
 
     func testInvalidRegistrationDate() throws {
-        let user = User.ut_init(email: "email@test.com", password: "lalo4ka$")
+        let user = User(email: "email@test.com", password: "lalo4ka$")
         user.ut_setRegistrationDate(Date().addingTimeInterval(500))
         XCTAssertThrowsError(try user.validate())
     }

@@ -5,7 +5,7 @@
 //  Created by vorona.vyacheslav on 2020/02/04.
 //
 
-import App
+@ testable import App
 import XCTest
 import Validation
 import DungeonChatCore

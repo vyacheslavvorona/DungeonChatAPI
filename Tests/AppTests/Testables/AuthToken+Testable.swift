@@ -5,7 +5,7 @@
 //  Created by vorona.vyacheslav on 2020/01/23.
 //
 
-import App
+@ testable import App
 
 extension AuthToken {
     

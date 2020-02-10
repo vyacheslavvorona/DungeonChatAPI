@@ -5,7 +5,7 @@
 //  Created by Vorona Vyacheslav on 1/13/20.
 //
 
-import App
+@ testable import App
 import FluentPostgreSQL
 import Authentication
 import Random
@@ -22,7 +22,7 @@ extension User {
         on conn: PostgreSQLConnection
     ) throws -> User {
         let hashedPassword = try BCrypt.hash(password)
-        let user = User.ut_init(email: email, password: hashedPassword)
+        let user = User(email: email, password: hashedPassword)
         user.firstName = firstName
         user.lastName = lastName
         user.username = username

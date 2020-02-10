@@ -5,7 +5,7 @@
 //  Created by Vorona Vyacheslav on 1/11/20.
 //
 
-import App
+@ testable import App
 import XCTest
 import Validation
 

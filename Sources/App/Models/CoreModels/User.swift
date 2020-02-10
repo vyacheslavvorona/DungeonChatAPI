@@ -77,14 +77,10 @@ extension User: Validatable {
     }
 }
 
-// MARK: - Unit test utilities
 #if DEBUG
+// MARK: - Unit test utilities
 public extension User {
     
-    static func ut_init(email: String, password: String) -> User {
-        User(email: email, password: password)
-    }
-
     func ut_setRegistrationDate(_ date: Date) {
         registrationDate = date
     }
