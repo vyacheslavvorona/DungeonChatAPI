@@ -24,3 +24,11 @@ extension UserContent: Validatable {
         return validations
     }
 }
+
+extension UserContent {
+    
+    var containsUpdatable: Bool {
+        let updatable: [Any?] = [email, firstName, lastName, username]
+        return updatable.contains(where: { $0 != nil })
+    }
+}

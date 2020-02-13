@@ -24,3 +24,11 @@ extension CampaignContent: Validatable {
         return validations
     }
 }
+
+extension CampaignContent {
+    
+    var containsUpdatable: Bool {
+        let updateble: [Any?] = [name, hostId, accessibilityInt]
+        return updateble.contains(where: { $0 != nil })
+    }
+}

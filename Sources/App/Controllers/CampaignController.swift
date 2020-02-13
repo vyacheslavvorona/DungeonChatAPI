@@ -49,6 +49,11 @@ private extension CampaignController {
         guard let userId = user.id else {
             throw Abort(.unauthorized, reason: "User id not found")
         }
+        guard campaignContent.containsUpdatable else {
+            throw Abort(.badRequest, reason: "Request does not contain updatable data")
+        }
+        try campaignContent.validate()
+        
         let campaignId = try request.parameters.next(Campaign.ID.self)
         return Campaign.find(campaignId, on: request)
             .unwrap(or: Abort(.notFound, reason: "No Campaign with specified id"))

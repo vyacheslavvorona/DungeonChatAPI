@@ -109,8 +109,8 @@ final class CampaignControllerTests: XCTestCase {
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
         XCTAssert(errorContent.error)
         let reason = "'name' contains an invalid character: '&' (allowed: whitespace, A-Z, a-z, 0-9) "
-        + "and 'name' should contain characters from: (A-Z, a-z) and 'name' is not nil, "
-        + "'accessibilityInt' is greater than 1 and 'accessibilityInt' is not nil"
+            + "and 'name' should contain characters from: (A-Z, a-z) and 'name' is not nil, "
+            + "'accessibilityInt' is greater than 1 and 'accessibilityInt' is not nil"
         XCTAssertEqual(errorContent.reason, reason)
     }
     
@@ -139,5 +139,138 @@ final class CampaignControllerTests: XCTestCase {
         XCTAssertEqual(responseBody.hostId, hostId)
         XCTAssertLessThan(responseBody.startDate!, Date())
         XCTAssertEqual(responseBody.accessibilityInt, accessibilityInt)
+    }
+    
+    func testGet_nonExistingCampaign() throws {
+        let response = try getCall(by: 999)
+        XCTAssertEqual(response.http.status, .notFound)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "No Campaign with specified id")
+    }
+    
+    // MARK: - Update tests
+    
+    private func updateCall(id: Campaign.ID, with requestBody: CampaignContent, token: AuthToken? = nil) throws -> Response {
+        var pathComponents = DungeonRoutes.Campaign.base.pathCompontent.convertToPathComponents()
+        pathComponents.append(PathComponent.constant(String(id)))
+        var headers = HTTPHeaders()
+        if let token = token {
+            headers.add(name: "Authorization", value: token.headerValue)
+        }
+        return try app.put(pathComponents, headers: headers, body: requestBody)
+    }
+    
+    func testUpdate_existingCampaign_fullContent_authorized() throws {
+        let email = "spiderman1@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
+        
+        let newHost = try User.save(
+            email: "some@email.com",
+            password: "somepass1",
+            on: conn
+        )
+        XCTAssertNotNil(newHost.id)
+        
+        let campaign = try Campaign.save(
+            name: "Some campaign 2",
+            hostId: existingUser.id!,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        XCTAssertNotNil(campaign.id)
+        
+        let newName = "Some other Campaign"
+        let updateContent = CampaignContent(
+            id: 782,
+            name: newName,
+            hostId: newHost.id!,
+            startDate: Date().addingTimeInterval(-800),
+            accessibilityInt: CampaignAccessibilityType.Public.rawValue
+        )
+        
+        let response = try updateCall(id: campaign.id!, with: updateContent, token: token)
+        XCTAssertEqual(response.http.status, .ok)
+        
+        let responseBody = try response.content.decode(Campaign.self).wait()
+        XCTAssertEqual(responseBody.id, campaign.id)
+        XCTAssertEqual(responseBody.name, newName)
+        XCTAssertEqual(responseBody.hostId, newHost.id)
+        XCTAssert(responseBody.startDate! =~~ campaign.startDate!)
+        XCTAssertEqual(responseBody.accessibilityInt, CampaignAccessibilityType.Public.rawValue)
+    }
+    
+    func testUpdate_existingCampaign_oldHost_authorized() throws {
+        let email = "spiderman2@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
+        XCTAssertNotNil(existingUser.id)
+        
+        let campaign = try Campaign.save(
+            name: "Some campaign 2",
+            hostId: existingUser.id!,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        XCTAssertNotNil(campaign.id)
+        
+        let newName = "Some other Campaign"
+        let updateContent = CampaignContent(
+            id: 783,
+            name: newName,
+            startDate: Date().addingTimeInterval(-800),
+            accessibilityInt: CampaignAccessibilityType.Public.rawValue
+        )
+        
+        let response = try updateCall(id: campaign.id!, with: updateContent, token: token)
+        XCTAssertEqual(response.http.status, .ok)
+        
+        let responseBody = try response.content.decode(Campaign.self).wait()
+        XCTAssertEqual(responseBody.id, campaign.id)
+        XCTAssertEqual(responseBody.name, newName)
+        XCTAssertEqual(responseBody.hostId, existingUser.id)
+        XCTAssert(responseBody.startDate! =~~ campaign.startDate!)
+        XCTAssertEqual(responseBody.accessibilityInt, CampaignAccessibilityType.Public.rawValue)
+    }
+    
+    func testUpdate_existingCampaign_emptyContent_authorized() throws {
+        let email = "spiderman3@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        
+        let response = try updateCall(id: 456, with: CampaignContent(), token: token)
+        XCTAssertEqual(response.http.status, .badRequest)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "Request does not contain updatable data")
     }
 }

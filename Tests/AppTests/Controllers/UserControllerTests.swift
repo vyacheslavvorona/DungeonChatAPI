@@ -364,19 +364,13 @@ final class UserControllerTests: XCTestCase {
             username: username,
             on: conn
         )
-        let existingUser = try token.user.get(on: conn).wait()
 
         let response = try updateCall(with: UserContent(), token: token)
-        XCTAssertEqual(response.http.status, .ok)
+        XCTAssertEqual(response.http.status, .badRequest)
 
-        let responseBody = try response.content.decode(UserContent.self).wait()
-        XCTAssertNotNil(responseBody.id)
-        XCTAssertEqual(responseBody.id, existingUser.id)
-        XCTAssertEqual(responseBody.email, email)
-        XCTAssertEqual(responseBody.firstName, firstName)
-        XCTAssertEqual(responseBody.lastName, lastName)
-        XCTAssertEqual(responseBody.username, username)
-        XCTAssert(responseBody.registrationDate! =~~ existingUser.registrationDate!)
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "Request does not contain updatable data")
     }
     
     func testUpdate_noToken() throws {

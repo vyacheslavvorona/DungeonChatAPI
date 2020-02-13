@@ -78,6 +78,9 @@ private extension UserController {
         guard let userId = authenticated.id else {
             throw Abort(.unauthorized, reason: "User id not found")
         }
+        guard userContent.containsUpdatable else {
+            throw Abort(.badRequest, reason: "Request does not contain updatable data")
+        }
         try userContent.validate()
         
         return User.find(userId, on: request)
