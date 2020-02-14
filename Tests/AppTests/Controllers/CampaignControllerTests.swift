@@ -273,4 +273,82 @@ final class CampaignControllerTests: XCTestCase {
         XCTAssert(errorContent.error)
         XCTAssertEqual(errorContent.reason, "Request does not contain updatable data")
     }
+    
+    func testUpdate_nonExistingCampaign_authorized() throws {
+        let email = "spiderman3@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        
+        let updateContent = CampaignContent(
+            name: "Some new name",
+            accessibilityInt: CampaignAccessibilityType.Public.rawValue
+        )
+        
+        let response = try updateCall(id: 848, with: updateContent, token: token)
+        XCTAssertEqual(response.http.status, .notFound)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "No Campaign with specified id")
+    }
+    
+    func testUpdate_notToken() throws {
+        let updateContent = CampaignContent(
+            name: "Some new name",
+            accessibilityInt: CampaignAccessibilityType.Public.rawValue
+        )
+        
+        let response = try updateCall(id: 848, with: updateContent, token: nil)
+        XCTAssertEqual(response.http.status, .unauthorized)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
+    }
+    
+    func testUpdate_wrongToken() throws {
+        let email = "spiderman4@email.com"
+        let password = "spiderPass0da0"
+        let wrongTokenString = "zBzpirY2HYQK3HI9g25NSt7qtVUI0z7EIhxEsrMA/04="
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
+        
+        try Campaign.save(
+            name: "My Great Campaign",
+            hostId: existingUser.id!,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        
+        let wrongToken = AuthToken(token: wrongTokenString, userId: existingUser.id!)
+        XCTAssertNotEqual(token.token, wrongToken.token)
+        
+        let updateContent = CampaignContent(
+            name: "Some new name",
+            accessibilityInt: CampaignAccessibilityType.Public.rawValue
+        )
+        
+        let response = try updateCall(id: 848, with: updateContent, token: nil)
+        XCTAssertEqual(response.http.status, .unauthorized)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
+    }
 }
