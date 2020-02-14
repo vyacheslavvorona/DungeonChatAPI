@@ -306,7 +306,7 @@ final class CampaignControllerTests: XCTestCase {
             accessibilityInt: CampaignAccessibilityType.Public.rawValue
         )
         
-        let response = try updateCall(id: 848, with: updateContent, token: nil)
+        let response = try updateCall(id: 848, with: updateContent)
         XCTAssertEqual(response.http.status, .unauthorized)
         
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
@@ -344,7 +344,123 @@ final class CampaignControllerTests: XCTestCase {
             accessibilityInt: CampaignAccessibilityType.Public.rawValue
         )
         
-        let response = try updateCall(id: 848, with: updateContent, token: nil)
+        let response = try updateCall(id: 848, with: updateContent)
+        XCTAssertEqual(response.http.status, .unauthorized)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
+    }
+    
+    // MARK: - Delete tests
+    
+    private func deleteCall(id: Campaign.ID, token: AuthToken? = nil) throws -> Response {
+        var pathComponents = DungeonRoutes.Campaign.base.pathCompontent.convertToPathComponents()
+        pathComponents.append(PathComponent.constant(String(id)))
+        var headers = HTTPHeaders()
+        if let token = token {
+            headers.add(name: "Authorization", value: token.headerValue)
+        }
+        return try app.delete(pathComponents, headers: headers, body: Application.Empty.instance)
+    }
+    
+    func testDelete_existingCampaign_host_authorized() throws {
+        let email = "spiderman5@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        let existingUser = try token.user.get(on: conn).wait()
+        
+        let campaign = try Campaign.save(
+            name: "Campaign to Delete 1",
+            hostId: existingUser.id!,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        let campaignId = campaign.id
+        XCTAssertNotNil(campaignId)
+        
+        let response = try deleteCall(id: campaignId!, token: token)
+        XCTAssertEqual(response.http.status, .noContent)
+        
+        let deletedCampaign = try Campaign.find(campaignId!, on: conn).wait()
+        XCTAssertNil(deletedCampaign)
+    }
+    
+    func testDelete_nonExistingCampaign_host_authorized() throws {
+        let email = "spiderman6@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        
+        let response = try deleteCall(id: 156, token: token)
+        XCTAssertEqual(response.http.status, .notFound)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "No Campaign with specified id")
+    }
+    
+    func testDelete_existingCampaign_notHost_authorized() throws {
+        let email = "spiderman7@email.com"
+        let password = "spiderPass0da0"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        
+        let campaign = try Campaign.save(
+            name: "Campaign to Delete 3",
+            hostId: 123,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        let campaignId = campaign.id
+        XCTAssertNotNil(campaignId)
+        
+        let response = try deleteCall(id: campaignId!, token: token)
+        XCTAssertEqual(response.http.status, .forbidden)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        XCTAssertEqual(errorContent.reason, "User is not able to delete specified Campaign")
+    }
+    
+    func testDelete_existingCampaign_host_unauthorized() throws {
+        let email = "spiderman8@email.com"
+        let password = "spiderPass0da0"
+        
+        let existingUser = try User.save(email: email, password: password, on: conn)
+        
+        let campaign = try Campaign.save(
+            name: "Campaign to Delete 4",
+            hostId: existingUser.id!,
+            accessibilityInt: CampaignAccessibilityType.Private.rawValue,
+            conn: conn
+        )
+        let campaignId = campaign.id
+        XCTAssertNotNil(campaignId)
+        
+        let response = try deleteCall(id: campaignId!, token: nil)
         XCTAssertEqual(response.http.status, .unauthorized)
         
         let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
