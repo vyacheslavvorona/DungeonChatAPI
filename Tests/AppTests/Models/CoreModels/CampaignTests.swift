@@ -138,4 +138,89 @@ final class CampaignTests: XCTestCase {
 
         XCTAssertThrowsError(try campaign.update(from: content, on: conn).wait())
     }
+    
+    func testHostGetter() throws {
+        let user = try User.save(
+            email: "campaign@host.com",
+            password: "hostpass000",
+            on: conn
+        )
+        XCTAssertNotNil(user.id)
+        
+        let campaign = try Campaign.save(
+            name: "Hosted Campaign",
+            hostId: user.id!,
+            accessibilityInt: 1,
+            conn: conn
+        )
+        
+        let host = try campaign.host.get(on: conn).wait()
+        XCTAssertEqual(host.id, user.id)
+        XCTAssertEqual(host.email, user.email)
+    }
+    
+    func testParticipantsGetter_exist() throws {
+        let user = try User.save(
+            email: "campaign1@host.com",
+            password: "hostpass000",
+            on: conn
+        )
+        
+        let campaign = try Campaign.save(
+            name: "Campaign to participate",
+            hostId: user.id!,
+            accessibilityInt: 1,
+            conn: conn
+        )
+        XCTAssertNotNil(campaign.id)
+        
+        let participant1 = try User.save(
+            email: "participant1@email.com",
+            password: "pass111",
+            on: conn
+        )
+        _ = campaign.participants.attach(participant1, on: conn)
+        
+        let participant2 = try User.save(
+            email: "participant2@email.com",
+            password: "pass111",
+            on: conn
+        )
+        _ = campaign.participants.attach(participant2, on: conn)
+        
+        let participants = try campaign.participants.query(on: conn).all().wait()
+        XCTAssertEqual(participants.count, 2)
+        XCTAssert(participants.contains(where: { $0.id! == participant1.id! }))
+        XCTAssert(participants.contains(where: { $0.email == participant1.email }))
+        XCTAssert(participants.contains(where: { $0.id! == participant2.id! }))
+        XCTAssert(participants.contains(where: { $0.email == participant2.email }))
+        
+        let participatedCampaigns1 = try participant1.participatedCampaigns.query(on: conn).all().wait()
+        XCTAssertEqual(participatedCampaigns1.count, 1)
+        XCTAssertEqual(participatedCampaigns1.first?.id, campaign.id)
+        XCTAssertEqual(participatedCampaigns1.first?.name, campaign.name)
+        
+        let participatedCampaigns2 = try participant2.participatedCampaigns.query(on: conn).all().wait()
+        XCTAssertEqual(participatedCampaigns2.count, 1)
+        XCTAssertEqual(participatedCampaigns2.first?.id, campaign.id)
+        XCTAssertEqual(participatedCampaigns2.first?.name, campaign.name)
+    }
+    
+    func testParticipantsGetter_empty() throws {
+        let user = try User.save(
+            email: "campaign2@host.com",
+            password: "hostpass000",
+            on: conn
+        )
+        
+        let campaign = try Campaign.save(
+            name: "Campaign to participate",
+            hostId: user.id!,
+            accessibilityInt: 1,
+            conn: conn
+        )
+        
+        let participants = try campaign.participants.query(on: conn).all().wait()
+        XCTAssert(participants.isEmpty)
+    }
 }

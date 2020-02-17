@@ -177,6 +177,7 @@ final class UserTests: XCTestCase {
             password: "pass000",
             on: conn
         )
+        XCTAssertNotNil(user.id)
         
         let campaign1 = try Campaign.save(
             name: "Campaign 1",
@@ -203,13 +204,13 @@ final class UserTests: XCTestCase {
         
         let campaign1Participants = try campaign1.participants.query(on: conn).all().wait()
         XCTAssertEqual(campaign1Participants.count, 1)
-        XCTAssert(campaign1Participants.contains(where: { $0.id! == user.id! }))
-        XCTAssert(campaign1Participants.contains(where: { $0.email == user.email }))
+        XCTAssertEqual(campaign1Participants.first?.id, user.id)
+        XCTAssertEqual(campaign1Participants.first?.email, user.email)
         
         let campaign2Participants = try campaign2.participants.query(on: conn).all().wait()
         XCTAssertEqual(campaign2Participants.count, 1)
-        XCTAssert(campaign2Participants.contains(where: { $0.id! == user.id! }))
-        XCTAssert(campaign2Participants.contains(where: { $0.email == user.email }))
+        XCTAssertEqual(campaign2Participants.first?.id, user.id)
+        XCTAssertEqual(campaign2Participants.first?.email, user.email)
     }
     
     func testParticipatedCampaignsGetter_empty() throws {
