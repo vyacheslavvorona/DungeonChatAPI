@@ -30,8 +30,8 @@ private extension UserController {
 
     func registerHandler(_ request: Request, newUser: UserContent) throws -> Future<UserContent> {
         do {
-            let user = try User(from: newUser)
             try newUser.validate()
+            let user = try User(from: newUser)
             return User.query(on: request).filter(\.email == user.email).first()
                 .flatMap { existingUser in
                     guard existingUser == nil else {

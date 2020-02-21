@@ -87,6 +87,30 @@ final class CampaignControllerTests: XCTestCase {
         XCTAssertEqual(errorContent.reason, "User has not been authenticated.")
     }
     
+    func testCreation_authorized_noName() throws {
+        let email = "spiderman@email.com"
+        let password = "spiderPass00"
+        
+        let token = try User.saveAndAuthorize(
+            email: email,
+            password: password,
+            firstName: "First",
+            lastName: "Last",
+            username: "xXxSpiderManxXx777",
+            on: conn
+        )
+        
+        let campaignContent = CampaignContent()
+        
+        let response = try createCall(with: campaignContent, token: token)
+        XCTAssertEqual(response.http.status, .badRequest)
+        
+        let errorContent = try response.content.decode(ErrorMiddlewareContent.self).wait()
+        XCTAssert(errorContent.error)
+        let reason = "Campaign name is missing"
+        XCTAssertEqual(errorContent.reason, reason)
+    }
+    
     func testCreation_authorized_invalidContent() throws {
         let email = "spiderman@email.com"
         let password = "spiderPass00"

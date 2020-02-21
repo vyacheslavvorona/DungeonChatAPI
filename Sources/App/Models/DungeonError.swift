@@ -7,4 +7,5 @@
 
 enum DungeonError: Error {
     case missingContent(message: String = "Unknown")
+    case missingModel(message: String = "Unknown")
 }

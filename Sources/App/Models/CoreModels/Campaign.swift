@@ -32,8 +32,10 @@ final class Campaign: SharedCampaign {
         self.hostId = hostId
     }
     
-    convenience init?(_ content: CampaignContent, hostId: User.ID) {
-        guard let name = content.name else { return nil }
+    convenience init(_ content: CampaignContent, hostId: User.ID) throws {
+        guard let name = content.name else {
+            throw DungeonError.missingContent(message: "Campaign name is missing")
+        }
         self.init(name: name, hostId: hostId)
         
         if let accessibilityInt = content.accessibilityInt {
@@ -52,7 +54,7 @@ final class Campaign: SharedCampaign {
         if let hostId = content.hostId {
             return User.find(hostId, on: conn).flatMap { user in
                 guard user != nil else {
-                    throw Abort(.notFound, reason: "User to become Campaign Host not found")
+                    throw DungeonError.missingModel(message: "User to become Campaign Host not found")
                 }
                 return updateWithPromise()
             }

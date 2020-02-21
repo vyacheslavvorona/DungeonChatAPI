@@ -27,15 +27,17 @@ class CampaignController: RouteCollection {
 private extension CampaignController {
 
     func createHandler(_ request: Request, campaignContent: CampaignContent) throws -> Future<Campaign> {
-        let user = try request.requireAuthenticated(User.self)
-        guard let hostId = user.id else {
-            throw Abort(.unauthorized, reason: "User id not found")
+        do {
+            let user = try request.requireAuthenticated(User.self)
+            guard let hostId = user.id else {
+                throw Abort(.unauthorized, reason: "User id not found")
+            }
+            try campaignContent.validate()
+            let newCampaign = try Campaign(campaignContent, hostId: hostId)
+            return newCampaign.save(on: request)
+        } catch DungeonError.missingContent(let message) {
+            throw Abort(.badRequest, reason: message)
         }
-        try campaignContent.validate()
-        guard let newCampaign = Campaign(campaignContent, hostId: hostId) else {
-            throw Abort(.internalServerError, reason: "Unable to create new Campaign")
-        }
-        return newCampaign.save(on: request)
     }
     
     func getHandler(_ request: Request) throws -> Future<Campaign> {
@@ -45,25 +47,28 @@ private extension CampaignController {
     }
     
     func updateHandler(_ request: Request, campaignContent: CampaignContent) throws -> Future<Campaign> {
-        let user = try request.requireAuthenticated(User.self)
-        guard let userId = user.id else {
-            throw Abort(.unauthorized, reason: "User id not found")
-        }
-        guard campaignContent.containsUpdatable else {
-            throw Abort(.badRequest, reason: "Request does not contain updatable data")
-        }
-        try campaignContent.validate()
-        
-        let campaignId = try request.parameters.next(Campaign.ID.self)
-        return Campaign.find(campaignId, on: request)
-            .unwrap(or: Abort(.notFound, reason: "No Campaign with specified id"))
-            .flatMap { campaign -> Future<Campaign> in
-                guard campaign.hostId == userId else {
-                    throw Abort(.forbidden, reason: "User is not able to modify specified Campaign")
-                }
-                return try campaign.update(from: campaignContent, on: request)
+        do {
+            let user = try request.requireAuthenticated(User.self)
+            guard let userId = user.id else {
+                throw Abort(.unauthorized, reason: "User id not found")
             }
-            .flatMap { $0.update(on: request, originalID: campaignId)}
+            guard campaignContent.containsUpdatable else {
+                throw Abort(.badRequest, reason: "Request does not contain updatable data")
+            }
+            try campaignContent.validate()
+            let campaignId = try request.parameters.next(Campaign.ID.self)
+            return Campaign.find(campaignId, on: request)
+                .unwrap(or: Abort(.notFound, reason: "No Campaign with specified id"))
+                .flatMap { campaign -> Future<Campaign> in
+                    guard campaign.hostId == userId else {
+                        throw Abort(.forbidden, reason: "User is not able to modify specified Campaign")
+                    }
+                    return try campaign.update(from: campaignContent, on: request)
+                }
+                .flatMap { $0.update(on: request, originalID: campaignId)}
+        } catch DungeonError.missingModel(let message) {
+            throw Abort(.notFound, reason: message)
+        }
     }
     
     func deleteHandler(_ request: Request) throws -> Future<HTTPResponseStatus> {

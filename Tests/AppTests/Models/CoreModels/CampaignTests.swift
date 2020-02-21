@@ -33,9 +33,15 @@ final class CampaignTests: XCTestCase {
     }
 
     // MARK: - Initialization
-
-    func testInvalidContentInit() {
-        XCTAssertNil(Campaign(CampaignContent(), hostId: 123))
+    
+    func testInitFromContent_noName() throws {
+        XCTAssertThrowsError(try Campaign(CampaignContent(), hostId: 123)) { error in
+            guard case let DungeonError.missingContent(message) = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+            XCTAssertEqual(message, "Campaign name is missing")
+        }
     }
 
     func testContentInit() {
@@ -44,11 +50,9 @@ final class CampaignTests: XCTestCase {
             return
         }
         let content = CampaignContent(name: "Campaign Name 3", accessibilityInt: accessibilityInt)
-        guard let campaign = Campaign(content, hostId: 123) else {
-            XCTFail("Campaign is not created")
-            return
-        }
-        XCTAssert(campaign.accessibilityInt == accessibilityInt)
+        XCTAssertNoThrow(try Campaign(content, hostId: 123))
+        let campaign = try? Campaign(content, hostId: 123)
+        XCTAssert(campaign?.accessibilityInt == accessibilityInt)
     }
 
     // MARK: - Validation
