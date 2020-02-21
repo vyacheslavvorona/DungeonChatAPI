@@ -16,6 +16,7 @@ final class UserContentTests: XCTestCase {
         try UserContent(
             id: 42,
             email: "email@test.com",
+            password: "goodpassword123$#",
             firstName: "Ivan",
             lastName: "Petrov",
             username: "Nagibator69",
@@ -40,6 +41,15 @@ final class UserContentTests: XCTestCase {
         XCTAssertThrowsError(try UserContent(email: "@asd.com").validate())
         XCTAssertThrowsError(try UserContent(email: "asd@.com").validate())
         XCTAssertThrowsError(try UserContent(email: "asd@asd.").validate())
+    }
+    
+    func testInvalidPassword() throws {
+        XCTAssertThrowsError(try UserContent(password: "").validate())
+        XCTAssertThrowsError(try UserContent(password: " ").validate())
+        XCTAssertThrowsError(try UserContent(password: "1").validate())
+        XCTAssertThrowsError(try UserContent(password: "AA").validate())
+        XCTAssertThrowsError(try UserContent(password: "%&A").validate())
+        XCTAssertThrowsError(try UserContent(password: "ASD6").validate())
     }
 
     func testInvalidFirstName() throws {

@@ -14,8 +14,8 @@ class UserController: RouteCollection {
 
     func boot(router: Router) throws {
         let group = router.grouped(DungeonRoutes.User.base.pathCompontent)
-        group.post(User.self, at: DungeonRoutes.User.register.pathCompontent, use: registerHandler)
-        group.post(User.self, at: DungeonRoutes.User.login.pathCompontent, use: loginHandler)
+        group.post(UserContent.self, at: DungeonRoutes.User.register.pathCompontent, use: registerHandler)
+        group.post(UserContent.self, at: DungeonRoutes.User.login.pathCompontent, use: loginHandler)
         group.get(User.ID.parameter, use: getHandler)
 
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
@@ -28,32 +28,37 @@ class UserController: RouteCollection {
 
 private extension UserController {
 
-    func registerHandler(_ request: Request, newUser: User) throws -> Future<UserContent> {
-        try newUser.validate()
-        return User.query(on: request).filter(\.email == newUser.email).first()
-            .flatMap { existingUser in
-                guard existingUser == nil else {
-                    throw Abort(.badRequest, reason: "A User with this email already exists")
+    func registerHandler(_ request: Request, newUser: UserContent) throws -> Future<UserContent> {
+        do {
+            let user = try User(from: newUser)
+            try newUser.validate()
+            return User.query(on: request).filter(\.email == user.email).first()
+                .flatMap { existingUser in
+                    guard existingUser == nil else {
+                        throw Abort(.badRequest, reason: "A User with this email already exists")
+                    }
+                    return user.save(on: request).map { $0.content }
                 }
-                let hashedPassword = try BCrypt.hash(newUser.password)
-                let user = User(email: newUser.email, password: hashedPassword)
-                return user.save(on: request).map { $0.content }
-            }
+        } catch DungeonError.missingContent(let message) {
+            throw Abort(.badRequest, reason: message)
+        }
     }
 
-    func loginHandler(_ request: Request, user: User) throws -> Future<AuthToken> {
-        guard user.email.stringIs(.email) else {
-            throw Abort(.badRequest, reason: "Wrong email format")
+    func loginHandler(_ request: Request, user: UserContent) throws -> Future<AuthToken> {
+        guard let email = user.email else {
+            throw Abort(.badRequest, reason: "Email is missing")
         }
-
-        return User.query(on: request).filter(\.email == user.email).first()
+        guard let password = user.password else {
+            throw Abort(.badRequest, reason: "Password is missing")
+        }
+        return User.query(on: request).filter(\.email == email).first()
             .unwrap(or: Abort(.notFound, reason: "No User with specified email"))
             .flatMap { existingUser -> Future<AuthToken> in
                 guard let userId = existingUser.id else {
                     throw Abort(.internalServerError, reason: "No User id")
                 }
                 let digest = try request.make(BCryptDigest.self)
-                guard try digest.verify(user.password, created: existingUser.password) else {
+                guard try digest.verify(password, created: existingUser.password) else {
                     throw Abort(.unauthorized, reason: "Wrong password")
                 }
 
@@ -82,7 +87,6 @@ private extension UserController {
             throw Abort(.badRequest, reason: "Request does not contain updatable data")
         }
         try userContent.validate()
-        
         return User.find(userId, on: request)
             .unwrap(or: Abort(.notFound, reason: "No User with specified id"))
             .flatMap { existingUser in

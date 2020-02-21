@@ -17,6 +17,7 @@ extension UserContent: Validatable {
         var validations = Validations(UserContent.self)
         try validations.add(\.id, .range(1...) || .nil)
         try validations.add(\.email, .email || .nil)
+        try validations.add(\.password, .ascii && .count(5...) || .nil)
         try validations.add(\.firstName, .letters && .count(2...) || .nil)
         try validations.add(\.lastName, .letters && .count(2...) || .nil)
         try validations.add(\.username, .alphanumeric && .contains(.letters) && .count(2...) || .nil)

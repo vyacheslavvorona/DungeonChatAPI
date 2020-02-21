@@ -9,6 +9,7 @@ import Vapor
 import Fluent
 import FluentPostgreSQL
 import Authentication
+import Crypto
 import DungeonChatCore
 
 public final class User: SharedUser {
@@ -32,14 +33,24 @@ public final class User: SharedUser {
         siblings()
     }
     
-    init(email: String, password: String) {
+    init(email: String, password: String) throws {
+        let hashedPassword = try BCrypt.hash(password)
         self.email = email
-        self.password = password
+        self.password = hashedPassword
     }
 
-    init(email: Email, password: String) {
-        self.email = email.stringValue
-        self.password = password
+    convenience init(email: Email, password: String) throws {
+        try self.init(email: email.stringValue, password: password)
+    }
+    
+    convenience init(from content: UserContent) throws {
+        guard let email = content.email else {
+            throw DungeonError.missingContent(message: "Email is missing")
+        }
+        guard let password = content.password else {
+            throw DungeonError.missingContent(message: "Password is missing")
+        }
+        try self.init(email: email, password: password)
     }
 }
 
@@ -68,7 +79,6 @@ extension User: Validatable {
         var validations = Validations(User.self)
         try validations.add(\.id, .range(1...) || .nil)
         try validations.add(\.email, .email)
-        try validations.add(\.password, .ascii && .count(5...))
         try validations.add(\.firstName, .letters && .count(2...) || .nil)
         try validations.add(\.lastName, .letters && .count(2...) || .nil)
         try validations.add(\.username, .alphanumeric && .contains(.letters) && .count(2...) || .nil)

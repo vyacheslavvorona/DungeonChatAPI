@@ -21,8 +21,7 @@ extension User {
         username: String? = nil,
         on conn: PostgreSQLConnection
     ) throws -> User {
-        let hashedPassword = try BCrypt.hash(password)
-        let user = User(email: email, password: hashedPassword)
+        let user = try User(email: email, password: password)
         user.firstName = firstName
         user.lastName = lastName
         user.username = username
