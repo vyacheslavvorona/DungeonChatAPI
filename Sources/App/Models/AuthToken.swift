@@ -10,11 +10,11 @@ import FluentPostgreSQL
 import Authentication
 import DungeonChatCore
 
-public final class AuthToken: PostgreSQLModel {
+public final class AuthToken: SharedAuthToken, PostgreSQLModel {
     public var id: Int?
-    private(set) var token: String
-    private(set) var userId: User.ID
-    private(set) var authDate: Date = Date()
+    public private(set) var token: String
+    public private(set) var userId: User.ID
+    public private(set) var authDate: Date = Date()
 
     var user: Parent<AuthToken, User> {
         parent(\.userId)
